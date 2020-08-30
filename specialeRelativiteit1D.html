@@ -15,6 +15,17 @@
 	
 	<script src="http://unpkg.com/save-svg-as-png@1.4.17/lib/saveSvgAsPng.js">
 	</script>
+
+	<!-- One of the following themes -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/> <!-- 'classic' theme -->
+	<!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/monolith.min.css"/>--> <!-- 'monolith' theme -->
+	<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/> --> <!-- 'nano' theme -->
+	
+	<!-- Modern or es5 bundle -->
+	<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.es5.min.js"></script>
+
+	<script src="diagraminteraction.js"></script>
 	
 	<style>
 		body {
@@ -27,14 +38,19 @@
 	<div class="container-fluid;">
 		<div class="container">
 			Hey! a
-			<div>
+			<div id="diagram-viewer" style="position:relative;">
+				<div id="diagram-highlight" style="display:block;position:absolute;width:0px;height:0px;z-index:-1;"
+				class="panel panel-default">
+					<div class="panel-body"></div>
+				</div>
+
 				<svg width="82.998mm"
 					height="62.128mm"
 					version="1.1"
 					viewBox="0 0 82.998 62.128"
 					xmlns:svg="http://www.w3.org/2000/svg"
 					xmlns:ns1="http://wanglongqi.github.io/WriteTeX"
-					id="diagram">
+					id="diagram" style="z-index:0;">
 					<defs>
 						<marker id="marker2279"
 								overflow="visible"
@@ -58,8 +74,8 @@
 						</marker>
 						
 						<g id="pointmarker">
-							<circle cx="0" cy="0" r="1.1588" id="centerpoint" />
-							<text class="label" x="2.2" y="2" style="font:normal 4.9389px sans-serif;">Element a</text>
+							<circle cx="0" cy="0" r="1.1588" data-binding="centerpoint" />
+							<text data-binding="label" x="2.2" y="2" style="font:normal 4.9389px sans-serif;">Element a</text>
 						</g>
 					</defs>
 					<g transform="translate(9.5562 -234.87)">
@@ -262,6 +278,7 @@
 						</g>
 						
 						<g id="diagramIndications" transform="translate(30.068, 283.1)">
+							<g id="diagramHelpersBackground"></g>
 							<!--<circle cx="0" cy="0" r="2" id="centerpoint" />
 							<text x="2.2" y="0" style="font:normal 8px sans-serif;">Element a</text>-->
 							
@@ -271,112 +288,99 @@
 			</div>
 			
 			<img id="diagram_png" src="" width="700" height="700" style="display:none;opacity:1;" />
-			
-			<div style="display:block;width:20px;height:20px;background-color:red;"
-				id="dummyBox"></div>
-			
-			<script>
-				let markings = [];
-				let markingID = 0;
 
-				function onMouseOver(sender, obj) {
-					console.log("Hovering!");
-					sender.style["fill"] = "red";
-					console.log(sender.style);
-				};
-				
-				function AddMarking(obj) {
-					//debugger;
-					if (obj.type === "point"){
-						let templateMarking = $("#pointmarker")[0].cloneNode(true);
-						$(".label", templateMarking)[0].innerHTML = obj.label;
-						templateMarking.id = obj.id = `marking${markingID}`;
-						markingID += 1;
+			<div class="panel panel-default" id="pointEditPanel" style="width:400px;display:none;position:absolute;">
+				<div class="panel-heading" style="position:relative;">
+					<table style="width:100%;">
+					<tr>
+						<td style="width:100%;">
+						Edit point
+						</td>
+						<td>
+							<button data-binding="closeButton" type="button" class="btn btn-danger">Close</button>
+						</td>
+					</tr>
+					</table>
+				</div>
+				<div class="panel-body container" style="position:relative;width:100%;">
+					<div class="form-group"
+						style="width:100%;position:relative;">
+						<label>Color:</label>
+						<input type="color" data-binding="color" id="pointColor" name="favcolor" value="#ff0000">
+						<br/>
 
-						markings.push(obj);
+						<label for="pointLabel">Label:</label>
+						<input type="text"
+								class="form-control"
+								data-binding="label"/>
+						<br/>
 
-						obj.setPos = function(x, ct) {
-							templateMarking.setAttribute("transform", `translate(${x} ${-ct})`);
-						};
-						obj.setPos(obj.x, obj.ct);
+						<label>x, ct:</label>
+						<div id="pointXY" style="display:flex;flex-flow:row wrap;align-content:stretch;">
+							<input type="text"
+									class="form-control"
+									data-binding="x" style="flex: 1 1 100px;"/>
+							<input type="text"
+									class="form-control"
+									data-binding="ct" style="flex: 1 1 100px;"/>
+						</div>
 
-						obj.setSpeed = function(beta) {
-							let gamma = Math.sqrt(1/(1 - (beta * beta)))
-							let xTransf = gamma * (obj.x - beta * obj.ct);
-							let ctTransf = gamma * (obj.ct - beta * obj.x);
-
-							obj.setPos(xTransf, ctTransf);
-						};
-
-						templateMarking.setAttribute("onmouseover", `onMouseOver(this, ${obj.id})`);
-
-						// $("#" + templateMarking.id).on("mouseover", function(){
-						// });
-
-						$("#diagramIndications")[0].appendChild(templateMarking);
-					}
-				};
-			</script>
+					</div>
+				</div>
+			</div>
 			
 			<script>
-				"use strict";
-				let currentSpeed = 0.0;
-
-			$( document ).ready(function() {
-				let a = document.getElementById("dummyBox");
-				let centerp = document.getElementById("centerpoint");
-	/*			console.log(`${centerp}: ${centerp.offsetParent} (${centerp.offsetLeft}, ${centerp.offsetTop})`);
-				console.log(`${dummyBox}: ${dummyBox.offsetParent} (${dummyBox.offsetLeft}, ${dummyBox.offsetTop})`);
-				console.log(`${centerp}: ${centerp.getBoundingClientRect()}`);
-				let jqCenterp = $("#centerpoint")[0];
-				console.log(`centerpoint: ${jqCenterp.getBBox()}`);
-				
-				if(false){
-					a.innerHTML = "Dummy box";
-				} */
-				
-				a.style.position = "absolute";
-				
-				let posX = centerp.getBoundingClientRect().x;
-				let posY = centerp.getBoundingClientRect().y;
-				
-				console.log(`Setting dummyBox to position ${posX}, ${posY}`)
-				
-				a.style.left = `${posX}px`;
-				a.style.top = `${posY}px`;
-				
-				$("#diagram_png")[0].style.width = `${$("#diagram")[0].clientWidth}px`;
-				$("#diagram_png")[0].style.height = `${$("#diagram")[0].clientHeight}px`;
-				
-				/* https://stackoverflow.com/questions/12255444/copy-svg-images-from-browser-to-clipboard */
-				svgAsPngUri(document.getElementById("diagram"), {scale:8.0}).then(uri => {
-				$("#diagram_png").attr('src', uri).show();
-
-				AddMarking({type:"point", x:10, ct:30, label:"Cool!"});
-
-				$("#speedSlider")[0].value = 0;
-				
-				$("#speedSlider").on('input', function() {
-					//debugger;
-					//speedDiff = $("#speedSlider")[0].value - currentSpeed;
-					currentSpeed = $("#speedSlider")[0].value * 1 / 100;
-
-					var i;
-					for (i = 0; i < markings.length; i++) {
-						markings[i].setSpeed(currentSpeed);
-					}
-					console.log(`Speed has been set to ${currentSpeed}`);
-				});
-
-		});
-			});
-				
+				// Source: https://www.npmjs.com/package/@simonwep/pickr
+				function initColorPicker(){
+					// Simple example, see optional options for more configuration.
+					const pickr = Pickr.create({
+						el: '.color-picker',
+						theme: 'classic', // or 'monolith', or 'nano'
+					
+						swatches: [
+							'rgba(244, 67, 54, 1)',
+							'rgba(233, 30, 99, 0.95)',
+							'rgba(156, 39, 176, 0.9)',
+							'rgba(103, 58, 183, 0.85)',
+							'rgba(63, 81, 181, 0.8)',
+							'rgba(33, 150, 243, 0.75)',
+							'rgba(3, 169, 244, 0.7)',
+							'rgba(0, 188, 212, 0.7)',
+							'rgba(0, 150, 136, 0.75)',
+							'rgba(76, 175, 80, 0.8)',
+							'rgba(139, 195, 74, 0.85)',
+							'rgba(205, 220, 57, 0.9)',
+							'rgba(255, 235, 59, 0.95)',
+							'rgba(255, 193, 7, 1)'
+						],
+					
+						components: {
+					
+							// Main components
+							preview: true,
+							opacity: true,
+							hue: true,
+					
+							// Input / output Options
+							interaction: {
+								hex: true,
+								rgba: true,
+								hsla: true,
+								hsva: true,
+								cmyk: true,
+								input: true,
+								clear: true,
+								save: true
+							}
+						}
+					});
+				}
 			</script>
 			
-			<!--<script>
+			<!-- <script>
 				function addPoint(x, y){
 				}
-			</script>-->
+			</script> -->
 			<div class="form-group"
 				style="width:300px">
 				<label for="usr">Name:</label>
