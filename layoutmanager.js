@@ -38,17 +38,22 @@ function createTemplateInstance(template, container) {
         modifyNode.removeAttribute("id");
     }
 
-    el.style.visibility = "hidden";
-    el.style.display = "block";
-    container.appendChild(el);
+    if (container != null) {
+        el.style.visibility = "hidden";
+        el.style.display = "block";
+        container.appendChild(el);
+    }
     return el;
 }
 
 function createDiagramCard() {
-    createTemplateInstance();
+    card = {diagramView: {el: createTemplateInstance("diagram-view", null)}};
+
+    card.el = createTemplateInstance("card", "cardsholder");
+    bindElements(card.el, card);
 }
 
 function createLayout(){
-    
+    createDiagramCard();
 }
 
