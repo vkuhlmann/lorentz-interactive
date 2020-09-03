@@ -54,13 +54,67 @@ function createDiagramCard() {
     let diagramView = {el: createTemplateInstance("diagram-view", null, true), markings: []};
     diagramView.highlight = {el: $("[data-id=diagram-highlight]", diagramView.el)[0]};
 
-    diagramView.setGlobalSpeed = function(globalBeta) {
-        this.globalBeta = globalBeta;
+    diagramView._speedRelRef = null;
+    diagramView._speedRel = 0;
+    diagramView.speedDependencies = [];
+
+    diagramView.setSpeed = function(relView, relSpeed = null) {
+        if (relView !== this._speedRelRef) {
+            if (this._speedRelRef == null && relView !== null)
+                relView.setSpeed(null);
+
+            let b = relView;
+            while (b !== null && b !== this) {
+                b = relView._speedRelRef;
+            }
+            if (b !== null)
+                throw "Rebase would imply circular reference.";
+            for (let lowerDep in this._speedRelRef?.speedDependencies) {
+                if (this._speedRelRef.speedDependencies[lowerDep] == this) {
+                    this._speedRelRef.speedDependencies.splice(lowerDep, 1);
+                    break;
+                }
+            }
+
+            this._speedRelRef = relView;
+            if (this._speedRelRef != null)
+                this._speedRelRef.speedDependencies.push(this);
+        }
+
+        if (relView === null)
+            relSpeed = 0;
+
+        if (relSpeed === null)
+            relSpeed = (relView.globalBeta - this.globalBeta) / (1 - relView.globalBeta * this.globalBeta);
+
+        this._speedRel = relSpeed;
+        this.updateSpeed();
+    };
+
+    diagramView.updateSpeed = function() {
+        if (this._speedRelRef != null)
+            this.globalBeta = (this._speedRel + this._speedRelRef.globalBeta) / (1 + this._speedRel * this._speedRelRef.globalBeta);
+        else
+            this.globalBeta = this._speedRel;
+
         for (let presence of this.markings) {
             presence.onViewBetaSet(this.globalBeta);
         }
-    }
-    diagramView.setGlobalSpeed(0);
+
+        for (let dep of this.speedDependencies) {
+            if (dep instanceof Function) {
+                dep();
+            } else {
+                dep.updateSpeed();
+            }
+        }
+    };
+
+    if (views.length > 0)
+        diagramView.setSpeed(views[0], 0);
+    else
+        diagramView.setSpeed(null, 0);
+
     views.push(diagramView);
 
     let card = {diagramView: diagramView, el: createTemplateInstance("card", $("#cardsholder")[0])};
@@ -78,6 +132,6 @@ function createLayout() {
     createDiagramCard();
 
     AddMarking({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
-    AddMarking({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[0]);
+    AddMarking({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
 }
 

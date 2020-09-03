@@ -301,17 +301,18 @@ function AddMarkingToView(obj, view) {
 
     presence.onViewBetaSet = function (beta) {
         this.viewBeta = beta;
-        this.baseTransfBeta = 
-            (this.controller.positionView.globalBeta - this.viewBeta) / (1 - this.controller.positionView.globalBeta * this.viewBeta);
         this._recalcPosition();
     }
 
     presence._recalcPosition = function () {
+        this.baseTransfBeta = 
+            (this.controller.positionView.globalBeta - this.viewBeta) / (1 - this.controller.positionView.globalBeta * this.viewBeta);
+
         let beta = this.baseTransfBeta;
 
         let gamma = Math.sqrt(1 / (1 - (beta * beta)))
-        let xTransf = gamma * (this.controller.x - beta * this.controller.ct);
-        let ctTransf = gamma * (this.controller.ct - beta * this.controller.x);
+        let xTransf = gamma * (this.controller.x + beta * this.controller.ct);
+        let ctTransf = gamma * (this.controller.ct + beta * this.controller.x);
 
         this._setPos(xTransf, ctTransf);
     };
@@ -355,17 +356,25 @@ function AddMarking(obj, positionView) {
 
         obj.positionView = positionView;
 
+        obj.onPositionViewSpeedChanged = function () {
+            obj._recalcPositions();
+        }
+
+        positionView.speedDependencies.push(obj.onPositionViewSpeedChanged);
+
         obj.setX = function (x) {
             obj.x = x;
             updateBinding(obj, "x");
-            for (let pres of obj.presences) {
-                pres._recalcPosition();
-            }
+            this._recalcPositions();
         }
 
         obj.setCt = function (ct) {
             obj.ct = ct;
             updateBinding(obj, "ct");
+            this._recalcPositions();
+        }
+
+        obj._recalcPositions = function() {
             for (let pres of obj.presences) {
                 pres._recalcPosition();
             }
@@ -421,7 +430,7 @@ $(document).ready(function () {
         //speedDiff = $("#speedSlider")[0].value - currentSpeed;
         currentSpeed = $("#speedSlider")[0].value * 1 / 100;
 
-        views[1].setGlobalSpeed(currentSpeed);
+        views[1].setSpeed(views[0], currentSpeed);
 
         // for (const id in markings) {
         //     markings[id].presences[views[0]]?.setSpeed(currentSpeed);
