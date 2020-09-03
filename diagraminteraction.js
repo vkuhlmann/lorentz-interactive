@@ -21,12 +21,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-let markings = {};
 let markingID = 0;
 let openPanels = [];
 
 function setTopPanel(panel) {
-    let zIndex = 0;
+    let zIndex = 2;
     let found = false;
     for (const p of openPanels) {
         if (p === panel)
@@ -50,8 +49,11 @@ function removePanelFromStack(panel) {
     }
 }
 
-function hoverPointEdit(obj, view) {
-    let rect = obj.presences[view].el.getBoundingClientRect();
+function hoverPointEdit(presence) {
+    let obj = presence.controller;
+    let view = presence.view;
+
+    let rect = presence.el.getBoundingClientRect();
     let containerRect = view.el.getBoundingClientRect();
 
     let margin = 10;
@@ -61,12 +63,10 @@ function hoverPointEdit(obj, view) {
     view.highlight.el.style.height = `${rect.height + 2 * margin}px`;
     view.highlight.el.style.display = "block";
 
-    obj.presences[view].el.addEventListener("pointerleave", function () {
+    presence.el.addEventListener("pointerleave", function () {
         view.highlight.el.style.display = "none";
     });
 }
-
-
 
 function createPanelFromTemplate(template, view) {
     let canceled = !view.el.dispatchEvent(new CustomEvent("panelcreating",
@@ -171,6 +171,9 @@ function createPanelFromTemplate(template, view) {
     });
 
     bindElements(panel.el, [panel]);
+    panel.hide();
+    activeTemplateInstance(panel.el);
+
     return panel;
 }
 
@@ -209,7 +212,10 @@ function positionPanel(panel, targetRect, targetMargin = 10, panelContainBounds 
 
 }
 
-function openPointEdit(obj, view, closeOnOtherOpen = false) {
+function openPointEdit(presence, closeOnOtherOpen = false) {
+    let obj = presence.controller;
+    let view = presence.view;
+
     if (obj.currentEditPanel == null) {
         let panel = createPanelFromTemplate($("#pointEditPanel")[0], view);
         if (panel == null)
@@ -217,9 +223,10 @@ function openPointEdit(obj, view, closeOnOtherOpen = false) {
 
         panel.obj = obj;
         panel.view = view;
+        panel.presence = presence;
 
         panel.reposition = function () {
-            positionPanel(this, this.obj.presences[view].el.getBoundingClientRect());
+            positionPanel(this, presence.el.getBoundingClientRect());
         };
 
         panel.reposition();
@@ -265,25 +272,26 @@ function openPointEdit(obj, view, closeOnOtherOpen = false) {
 }
 
 let views = [];
+let autoMarkings = [];
+
+let nextViewID = 0;
 
 function AddMarkingToView(obj, view) {
-    if (obj.presences === null)
-        obj.presences = {};
-
     diagramIndications = $("[data-binding=diagram-indications]", view.el)[0];
     let el = createTemplateInstance("pointmarker", diagramIndications);
 
-    obj.presences[view] = { view: view, el: el, bindings: [] };
+    let presence = { view: view, el: el, controller: obj, bindings: [] };
+
+    view.markings.push(presence);
+    obj.presences.push(presence);
 
     //$("[data-binding=label]", el)[0].innerHTML = obj.label;
     el.id = `view${view.id}_marking${markingID}`;
     markingID += 1;
 
-    markings[obj.id] = obj;
-
-    obj.presences[view].setPos = function (x, ct) {
-        this.transformedX = x;
-        this.transformedCt = ct;
+    presence._setPos = function (x, ct) {
+        this.x = x;
+        this.ct = ct;
         //obj.x = x;
         //obj.ct = ct;
         this.el.setAttribute("transform", `translate(${x} ${-ct})`);
@@ -291,35 +299,44 @@ function AddMarkingToView(obj, view) {
 
     //obj.presences[view].setPos(obj.x, obj.ct);
 
-    obj.presences[view].setSpeed = function (beta) {
-        obj.presences[view].beta = beta;
-        let gamma = Math.sqrt(1 / (1 - (beta * beta)))
-        let xTransf = gamma * (obj.x - beta * obj.ct);
-        let ctTransf = gamma * (obj.ct - beta * obj.x);
+    presence.onViewBetaSet = function (beta) {
+        this.viewBeta = beta;
+        this.baseTransfBeta = 
+            (this.controller.positionView.globalBeta - this.viewBeta) / (1 - this.controller.positionView.globalBeta * this.viewBeta);
+        this._recalcPosition();
+    }
 
-        this.setPos(xTransf, ctTransf);
+    presence._recalcPosition = function () {
+        let beta = this.baseTransfBeta;
+
+        let gamma = Math.sqrt(1 / (1 - (beta * beta)))
+        let xTransf = gamma * (this.controller.x - beta * this.controller.ct);
+        let ctTransf = gamma * (this.controller.ct - beta * this.controller.x);
+
+        this._setPos(xTransf, ctTransf);
     };
-    obj.presences[view].setSpeed(0);
+
+    presence.onViewBetaSet(view.globalBeta);
 
     el.addEventListener("pointerover",
         function () {
-            hoverPointEdit(obj, view);
+            hoverPointEdit(presence);
         });
     el.addEventListener("pointerdown",
         function () {
-            openPointEdit(obj, view);
+            openPointEdit(presence);
         });
 
-    bindElements(el, [obj.presences[view], obj]);
-    el.style.visibility = "visible";
+    bindElements(el, [presence, presence.controller]);
+    activeTemplateInstance(el);
 }
 
-function AddMarking(obj) {
+function AddMarking(obj, positionView) {
     if (obj.type === "point") {
         if (obj.bindings == null)
             obj.bindings = {};
 
-        obj.presences = {};
+        obj.presences = [];//{};
 
         obj.setLabel = function (label) {
             if (label == "sinterklaas")
@@ -336,24 +353,32 @@ function AddMarking(obj) {
             obj.el.dispatchEvent(new CustomEvent("colorchanged", { detail: { color: obj.color, obj: obj } }));
         }
 
+        obj.positionView = positionView;
+
         obj.setX = function (x) {
             obj.x = x;
             updateBinding(obj, "x");
-            for (let view in obj.presences) {
-                obj.presences[view].setSpeed(obj.presences[view].beta);
+            for (let pres of obj.presences) {
+                pres._recalcPosition();
             }
         }
 
         obj.setCt = function (ct) {
             obj.ct = ct;
             updateBinding(obj, "ct");
-            for (let view in obj.presences) {
-                obj.presences[view].setSpeed(obj.presences[view].beta);
+            for (let pres of obj.presences) {
+                pres._recalcPosition();
             }
         }
 
-        for (let view of views) {
-            AddMarkingToView(obj, view);
+        obj.addToView = function(view) {
+            AddMarkingToView(this, view);
+        }
+
+        autoMarkings.push(obj);
+
+        for (let v of views) {
+            obj.addToView(v);
         }
     }
 };
@@ -370,15 +395,24 @@ function updatePNG() {
 $(document).ready(function () {
     debugger;
 
-    views.push({ el: $("#diagram-view")[0], id: 0 });
-    views[0].highlight = { el: $("#diagram-highlight", views[0].el)[0] };
+    // views.push({ el: $("#diagram-view")[0], id: 0, markings: [] });
+    // views[0].highlight = { el: $("#diagram-highlight", views[0].el)[0] };
+    // views[0].setGlobalSpeed = function(globalBeta) {
+    //     this.globalBeta = globalBeta;
+    //     for (let presence of this.markings) {
+    //         presence.onViewBetaSet(this.globalBeta);
+    //     }
+    // }
+    // views[0].setGlobalSpeed(0);
 
-    $("#diagram_png")[0].style.width = `${$("#diagram")[0].clientWidth}px`;
-    $("#diagram_png")[0].style.height = `${$("#diagram")[0].clientHeight}px`;
+    // // $("#diagram_png")[0].style.width = `${$("#diagram")[0].clientWidth}px`;
+    // // $("#diagram_png")[0].style.height = `${$("#diagram")[0].clientHeight}px`;
 
-    updatePNG();
-    AddMarking({ type: "point", x: 10, ct: 30, label: "Cool!" });
-    AddMarking({ type: "point", x: -10, ct: 30, label: "Super cool!" });
+    // // updatePNG();
+    // AddMarking({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
+    // AddMarking({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[0]);
+
+    createLayout();
 
     $("#speedSlider")[0].value = 0;
 
@@ -387,10 +421,12 @@ $(document).ready(function () {
         //speedDiff = $("#speedSlider")[0].value - currentSpeed;
         currentSpeed = $("#speedSlider")[0].value * 1 / 100;
 
-        for (const id in markings) {
-            markings[id].presences[views[0]]?.setSpeed(currentSpeed);
-        }
-        console.log(`Speed has been set to ${currentSpeed}`);
+        views[1].setGlobalSpeed(currentSpeed);
+
+        // for (const id in markings) {
+        //     markings[id].presences[views[0]]?.setSpeed(currentSpeed);
+        // }
+        //console.log(`Speed has been set to ${currentSpeed}`);
     });
 
     //createLayout();

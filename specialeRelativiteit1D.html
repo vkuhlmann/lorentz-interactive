@@ -60,15 +60,23 @@ SOFTWARE.
 			background-color: #eee;
 		}
 	
+		.template {
+			display: none !important;
+		}
+
+		.template-staging {
+			display: none !important;
+		}
+
 	</style>
 </head>
 <body>
 	<div class="container-fluid;">
 		<div class="container">
 			Hey! a
-			<div id="diagram-card" style="position:relative;">
-				<div id="diagram-view">
-					<div id="diagram-highlight" style="display:block;position:absolute;width:0px;height:0px;z-index:-1;"
+			<div id="diagram-card">
+				<div id="diagram-view" class="template" style="position:relative;">
+					<div id="diagram-highlight" style="display:block;position:absolute;width:0px;height:0px;z-index:1;"
 					class="panel panel-default">
 						<div class="panel-body"></div>
 					</div>
@@ -79,7 +87,7 @@ SOFTWARE.
 						viewBox="0 0 82.998 62.128"
 						xmlns:svg="http://www.w3.org/2000/svg"
 						xmlns:ns1="http://wanglongqi.github.io/WriteTeX"
-						id="diagram" style="z-index:0;">
+						id="diagram" style="z-index:2;position:relative;">
 						<defs>
 							<marker id="marker2279"
 									overflow="visible"
@@ -319,7 +327,7 @@ SOFTWARE.
 				<img id="diagram_png" src="" width="700" height="700" style="display:none;opacity:1;" />
 			</div>
 
-			<div class="panel panel-default" id="pointEditPanel" style="width:400px;display:none;position:absolute;">
+			<div class="panel panel-default template" id="pointEditPanel" style="width:400px;display:block;position:absolute;">
 				<div class="panel-heading panel-grip" style="position:relative;">
 					<table style="width:100%;">
 					<tr>
@@ -359,7 +367,7 @@ SOFTWARE.
 				</div>
 			</div>
 
-			<div id="card" style="display:none;" class="panel panel-info">
+			<div id="card" style="display:block;background-color:#ddd" class="panel panel-info template">
 				<div class="panel-heading">Card</div>
 				<div class="panel-body" style="min-width:400px;">
 					<div data-binding="diagramView"></div>

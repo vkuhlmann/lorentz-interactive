@@ -21,7 +21,7 @@ function bindButton(el, context, targetName, listeners, applyListeners = true) {
 }
 
 function bindInput(el, context, targetName, listeners, applyListeners = true) {
-    if (!(typeof (context[targetName]) == "string") && isNaN(context[targetName]))
+    if (typeof (context[targetName]) != "string" && isNaN(context[targetName]))
         return false;
 
     el.value = context[targetName];
@@ -81,22 +81,26 @@ function bindInput(el, context, targetName, listeners, applyListeners = true) {
 }
 
 function bindContent(el, context, targetName, listeners, applyListeners = true) {
-    if (typeof (context[targetName]) == "string" || isNaN(context[targetName])) {
+    if (typeof (context[targetName]) == "string" || !isNaN(context[targetName])) {
         el.innerHTML = context[targetName];
 
-        if (context.bindings[targetName] == null)
-            context.bindings[targetName] = [];
-        context.bindings[targetName].push({
-            el: el,
-            update: () => el.innerHTML = context[targetName]
-        });
+        if (context.bindings != null) {
+            if (context.bindings[targetName] == null)
+                context.bindings[targetName] = [];
+            context.bindings[targetName].push({
+                el: el,
+                update: () => el.innerHTML = context[targetName]
+            });
+        } else {
+            console.log("WARN: Missing out on bindings!");
+        }
         return true;
     }
 
     if (el.getAttribute("binding-placed") === "true")
         return true;
 
-    target = context[targetName];
+    let target = context[targetName];
     if (!(target instanceof Element))
         target = target.el;
     if (!(target instanceof Element))
@@ -249,8 +253,8 @@ function bindPointEditElements(panel) {
         if (targetElements == 0)
             return;
 
-        if (panel.obj.color === undefined)
-            panel.obj.color = "#000";
+        if (panel.presence.controller.color === undefined)
+            panel.presence.controller.color = "#000";
 
         // Source: https://www.npmjs.com/package/@simonwep/pickr
         const pickr = Pickr.create({
@@ -258,7 +262,7 @@ function bindPointEditElements(panel) {
             theme: 'classic', // or 'monolith', or 'nano'
             //container: panel.el,
             comparison: false,
-            default: panel.obj.color,
+            default: panel.presence.controller.color,
 
             swatches: [
                 'rgba(244, 67, 54, 1)',
@@ -311,13 +315,13 @@ function bindPointEditElements(panel) {
                 + pad(d.getSeconds(), 2);
 
             //console.log(`[${timeString}] Color changed!`);
-            panel.obj[`set${name.substr(0, 1).toUpperCase()}${name.substr(1)}`](color.toRGBA().toString(2));
+            panel.presence.controller[`set${name.substr(0, 1).toUpperCase()}${name.substr(1)}`](color.toRGBA().toString(2));
         });
 
         panel.pickr = pickr;
     }
 
-    bindElements(panel.el, [panel, panel.obj.presences[panel.view], panel.obj]);
+    bindElements(panel.el, [panel, panel.presence, panel.presence.controller]);
     //updateFields();
     createColorBinding("color");
 }

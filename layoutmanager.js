@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-function createTemplateInstance(template, container) {
+function createTemplateInstance(template, container, activeOnAdd = false) {
     let el;
     if (typeof(template) == "string") {
         el = $(`#${template}`)[0].cloneNode(true);
@@ -38,22 +38,46 @@ function createTemplateInstance(template, container) {
         modifyNode.removeAttribute("id");
     }
 
-    if (container != null) {
-        el.style.visibility = "hidden";
-        el.style.display = "block";
+    if (!activeOnAdd)
+        el.classList.add("template-staging");
+    el.classList.remove("template");
+    if (container != null)
         container.appendChild(el);
-    }
     return el;
 }
 
-function createDiagramCard() {
-    card = {diagramView: {el: createTemplateInstance("diagram-view", null)}};
-
-    card.el = createTemplateInstance("card", "cardsholder");
-    bindElements(card.el, card);
+function activeTemplateInstance(el) {
+    el.classList.remove("template-staging");
 }
 
-function createLayout(){
+function createDiagramCard() {
+    let diagramView = {el: createTemplateInstance("diagram-view", null, true), markings: []};
+    diagramView.highlight = {el: $("[data-id=diagram-highlight]", diagramView.el)[0]};
+
+    diagramView.setGlobalSpeed = function(globalBeta) {
+        this.globalBeta = globalBeta;
+        for (let presence of this.markings) {
+            presence.onViewBetaSet(this.globalBeta);
+        }
+    }
+    diagramView.setGlobalSpeed(0);
+    views.push(diagramView);
+
+    let card = {diagramView: diagramView, el: createTemplateInstance("card", $("#cardsholder")[0])};
+    bindElements(card.el, card);
+
+    activeTemplateInstance(card.el);
+    for (let m of autoMarkings) {
+        m.addToView(diagramView);
+    }
+
+}
+
+function createLayout() {
     createDiagramCard();
+    createDiagramCard();
+
+    AddMarking({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
+    AddMarking({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[0]);
 }
 
