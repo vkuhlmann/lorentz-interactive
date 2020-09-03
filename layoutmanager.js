@@ -46,9 +46,11 @@ function createTemplateInstance(template, container, activeOnAdd = false) {
     return el;
 }
 
-function activeTemplateInstance(el) {
+function activateTemplateInstance(el) {
     el.classList.remove("template-staging");
 }
+
+let cards = [];
 
 function createDiagramCard() {
     let diagramView = {el: createTemplateInstance("diagram-view", null, true), markings: []};
@@ -118,13 +120,37 @@ function createDiagramCard() {
     views.push(diagramView);
 
     let card = {diagramView: diagramView, el: createTemplateInstance("card", $("#cardsholder")[0])};
+    card.viewSpeedControl = {el: $("[data-id=viewSpeedControl]", card.el)[0]};
     bindElements(card.el, card);
+    card.viewSpeedControl.sliders = [];
 
-    activeTemplateInstance(card.el);
+    card.addCardLink = function(other) {
+        let slider = {el: createTemplateInstance("template-relspeed", card.viewSpeedControl.el), bindings: []};
+        slider.value = 0;
+        slider.setValue = function(val) {
+            card.diagramView.setSpeed(other.diagramView, val);
+            slider.value = val;
+            updateBinding(slider, "value");
+        };
+
+        card.viewSpeedControl.sliders.push(slider);
+        bindElements(slider.el, slider);
+        activateTemplateInstance(slider.el);
+    }
+
+    for (let otherCard of cards) {
+        card.addCardLink(otherCard);
+    }
+
+    cards.push(card);
+    for (let c of cards) {
+        c.addCardLink(card);
+    }
+    
+    activateTemplateInstance(card.el);
     for (let m of autoMarkings) {
         m.addToView(diagramView);
     }
-
 }
 
 function createLayout() {

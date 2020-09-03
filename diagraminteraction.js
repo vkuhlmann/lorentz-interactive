@@ -172,7 +172,7 @@ function createPanelFromTemplate(template, view) {
 
     bindElements(panel.el, [panel]);
     panel.hide();
-    activeTemplateInstance(panel.el);
+    activateTemplateInstance(panel.el);
 
     return panel;
 }
@@ -329,7 +329,7 @@ function AddMarkingToView(obj, view) {
         });
 
     bindElements(el, [presence, presence.controller]);
-    activeTemplateInstance(el);
+    activateTemplateInstance(el);
 }
 
 function AddMarking(obj, positionView) {
