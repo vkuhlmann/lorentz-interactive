@@ -56,20 +56,26 @@ function createDiagramCard() {
     let diagramView = { el: createTemplateInstance("diagram-view", null, true), markings: [] };
     diagramView.highlight = { el: $("[data-id=diagram-highlight]", diagramView.el)[0] };
 
-    diagramView._speedRelRef = null;
+    diagramView._speedRelRef = undefined;
     diagramView._speedRel = 0;
     diagramView.speedDependencies = [];
 
+    diagramView.canBaseOn = function (relView) {
+        if (this._speedRelRef === null && relView !== this)
+            return true;
+        let b = relView;
+        while (b !== null && b !== this) {
+            b = b._speedRelRef;
+        }
+        return b === null;
+    }
+
     diagramView.setSpeed = function (relView, relSpeed = null) {
         if (relView !== this._speedRelRef) {
-            if (this._speedRelRef == null && relView !== null)
+            if (this._speedRelRef === null && relView !== null)
                 relView.setSpeed(null);
 
-            let b = relView;
-            while (b !== null && b !== this) {
-                b = b._speedRelRef;
-            }
-            if (b !== null)
+            if (!diagramView.canBaseOn(relView))
                 throw "Rebase would imply circular reference.";
             for (let lowerDep in this._speedRelRef?.speedDependencies) {
                 if (this._speedRelRef.speedDependencies[lowerDep] == this) {
@@ -130,8 +136,18 @@ function createDiagramCard() {
         }
     });
     card.deleteCard = function () {
+        if (views.length > 1 && card.diagramView._speedRelRef === null) {
+            let a;
+            for (a of card.diagramView.speedDependencies) {
+                if (!(a instanceof Function)) {
+                    card.diagramView.setSpeed(a, null);
+                    break;
+                }
+            }
+        }
         card.el.remove();
         card.el = null;
+
         for (let i in views) {
             if (views[i] == card.diagramView) {
                 views.splice(i, 1);
@@ -178,7 +194,11 @@ function createDiagramCard() {
             parent: card, comparison: other
         };
         slider.value = 0;
+        slider.valueFormatted = "";
+        slider.noFormattedSet = false;
+
         slider.setValue = function (val) {
+            val = parseFloat(val);
             try {
                 card.diagramView.setSpeed(other.diagramView, val);
             } catch (ex) {
@@ -186,14 +206,63 @@ function createDiagramCard() {
                 slider.updateValue();
                 return;
             }
-            slider.value = val;
-            updateBinding(slider, "value");
+            /*slider.value = val;
+            updateBinding(slider, "value");*/
+            slider.updateValue();
         };
+
+        slider.setValueFormatted = function (val) {
+            let res = slider.setValue(parseFloat(val));
+            slider.noFormattedSet = false;
+            return res;
+        }
+
+        slider.setValueFormattedLive = function (val) {
+            slider.noFormattedSet = true;
+            slider.setValueFormatted(val);
+        }
 
         slider.updateValue = function () {
             slider.value = (card.diagramView.globalBeta - other.diagramView.globalBeta)
                 / (1 - card.diagramView.globalBeta * other.diagramView.globalBeta);
+
+            slider.value = Math.round((slider.value + Number.EPSILON) * 1e2) / 1e2;//).toString() + " c";
+            slider.valueFormatted = slider.value.toString() + " c";
+
             updateBinding(slider, "value");
+
+            if (!slider.noFormattedSet) {
+                updateBinding(slider, "valueFormatted");
+            }
+
+            let disable = false;
+            let active = false;
+
+            disable = !card.diagramView.canBaseOn(other.diagramView);
+
+            if (card.diagramView._speedRelRef == other.diagramView)
+                active = true;
+
+            if (disable)
+                slider.el.classList.add("disabled");
+            else
+                slider.el.classList.remove("disabled");
+
+            $("input, button", slider.el).prop("disabled", disable);
+
+            // if (active) {
+            //     slider.el.style.backgroundColor = "var(--cyan)";
+            // } else {
+            //     slider.el.style.backgroundColor = "transparent";
+            // }
+            if (active) {
+                slider.el.classList.add("relspeed-active");
+                slider.el.classList.remove("relspeed-inactive");
+            } else {
+                slider.el.classList.add("relspeed-inactive");
+                slider.el.classList.remove("relspeed-active");
+            }
+
         }
 
         other.diagramView.speedDependencies.push(function () {
@@ -206,6 +275,8 @@ function createDiagramCard() {
 
         card.viewSpeedControl.sliders.push(slider);
         bindElements(slider.el, slider);
+
+        slider.updateValue();
         activateTemplateInstance(slider.el);
     }
 
@@ -224,25 +295,28 @@ function createDiagramCard() {
     }
 }
 
+let isColumnWidthFixed;
+let maxColumnCount;
+
 function setCardColumns(colCount, fixWidth = false) {
     let selector = "#cardsholder > .lorentz-card";
-    if (colCount == null) {
+    maxColumnCount = colCount;
+    isColumnWidthFixed = fixWidth;
+
+    if (maxColumnCount == null) {
         changeStylesheetRule(document.styleSheets[document.styleSheets.length - 1], selector, "flex", "1 1 300px");
         changeStylesheetRule(document.styleSheets[document.styleSheets.length - 1], selector, "max-width", "500px");
         //$("#columns-fixed")[0].value = "";
         $("#max-columns")[0].value = "";
     } else {
         changeStylesheetRule(document.styleSheets[document.styleSheets.length - 1], selector,
-            "flex", `${fixWidth ? "0" : "1"} 1 calc(${100 / colCount}% - ${10 + 0.1 / colCount}px)`);
+            "flex", `${isColumnWidthFixed ? "0" : "1"} 1 calc(${100 / maxColumnCount}% - ${10 + 0.1 / maxColumnCount}px)`);
 
         changeStylesheetRule(document.styleSheets[document.styleSheets.length - 1], selector, "max-width", "auto");
         //$("#columns-fixed")[0].value = colCount;
-        $("#max-columns")[0].value = colCount;
+        $("#max-columns")[0].value = maxColumnCount;
     }
 }
-
-let isColumnWidthFixed;
-let maxColumnCount;
 
 function createLayout() {
     createDiagramCard();
@@ -288,6 +362,6 @@ function createLayout() {
         setCardColumns(maxColumnCount, isColumnWidthFixed);
     });
 
-    setCardColumns(3, false);
+    setCardColumns(4, false);
 }
 

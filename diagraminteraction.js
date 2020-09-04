@@ -305,7 +305,7 @@ function AddMarkingToView(obj, view) {
     }
 
     presence._recalcPosition = function () {
-        this.baseTransfBeta = 
+        this.baseTransfBeta =
             (this.controller.positionView.globalBeta - this.viewBeta) / (1 - this.controller.positionView.globalBeta * this.viewBeta);
 
         let beta = this.baseTransfBeta;
@@ -374,13 +374,13 @@ function AddMarking(obj, positionView) {
             this._recalcPositions();
         }
 
-        obj._recalcPositions = function() {
+        obj._recalcPositions = function () {
             for (let pres of obj.presences) {
                 pres._recalcPosition();
             }
         }
 
-        obj.addToView = function(view) {
+        obj.addToView = function (view) {
             AddMarkingToView(this, view);
         }
 
@@ -409,9 +409,9 @@ function changeStylesheetRule(stylesheet, selector, property, value) {
     value = value.toLowerCase();
 
     // Change it if it exists
-    for(var i = 0; i < stylesheet.cssRules.length; i++) {
+    for (var i = 0; i < stylesheet.cssRules.length; i++) {
         var rule = stylesheet.cssRules[i];
-        if(rule.selectorText === selector) {
+        if (rule.selectorText === selector) {
             rule.style[property] = value;
             return;
         }
@@ -443,20 +443,20 @@ $(document).ready(function () {
 
     createLayout();
 
-    $("#speedSlider")[0].value = 0;
+    // $("#speedSlider")[0].value = 0;
 
-    $("#speedSlider").on('input', function () {
-        //debugger;
-        //speedDiff = $("#speedSlider")[0].value - currentSpeed;
-        currentSpeed = $("#speedSlider")[0].value * 1 / 100;
+    // $("#speedSlider").on('input', function () {
+    //     //debugger;
+    //     //speedDiff = $("#speedSlider")[0].value - currentSpeed;
+    //     currentSpeed = $("#speedSlider")[0].value * 1 / 100;
 
-        views[1].setSpeed(views[0], currentSpeed);
+    //     views[1].setSpeed(views[0], currentSpeed);
 
-        // for (const id in markings) {
-        //     markings[id].presences[views[0]]?.setSpeed(currentSpeed);
-        // }
-        //console.log(`Speed has been set to ${currentSpeed}`);
-    });
+    //     // for (const id in markings) {
+    //     //     markings[id].presences[views[0]]?.setSpeed(currentSpeed);
+    //     // }
+    //     //console.log(`Speed has been set to ${currentSpeed}`);
+    // });
 
     //createLayout();
 
