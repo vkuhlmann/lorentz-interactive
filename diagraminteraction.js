@@ -401,6 +401,26 @@ function updatePNG() {
     });
 }
 
+// Source: https://stackoverflow.com/questions/6620393/is-it-possible-to-alter-a-css-stylesheet-using-javascript-not-the-style-of-an
+function changeStylesheetRule(stylesheet, selector, property, value) {
+    // Make the strings lowercase
+    selector = selector.toLowerCase();
+    property = property.toLowerCase();
+    value = value.toLowerCase();
+
+    // Change it if it exists
+    for(var i = 0; i < stylesheet.cssRules.length; i++) {
+        var rule = stylesheet.cssRules[i];
+        if(rule.selectorText === selector) {
+            rule.style[property] = value;
+            return;
+        }
+    }
+
+    // Add it if it does not
+    stylesheet.insertRule(selector + " { " + property + ": " + value + "; }", 0);
+}
+
 $(document).ready(function () {
     debugger;
 
