@@ -231,7 +231,7 @@ function openPointEdit(presence, closeOnOtherOpen = false) {
 
         panel.reposition();
 
-        bindPointEditElements(panel);
+        bindElements(panel.el, [panel, panel.presence, panel.presence.controller]);
 
         let canceled = !view.el.dispatchEvent(new CustomEvent("panelopen",
             {
@@ -337,7 +337,7 @@ function AddMarkingToView(obj, view) {
             openPointEdit(presence);
         });
 
-    presence.deletePresence = function() {
+    presence.deletePresence = function () {
         if (obj.currentEditPanel != null)
             obj.currentEditPanel.close();
 
