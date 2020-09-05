@@ -297,6 +297,14 @@ function AddMarkingToView(obj, view) {
         this.el.setAttribute("transform", `translate(${x} ${-ct})`);
     };
 
+    presence._setColor = function (c) {
+        this.el.style.fill = c;
+    }
+
+    presence._updateColor = function () {
+        presence._setColor(presence.controller.color.value);
+    }
+
     //obj.presences[view].setPos(obj.x, obj.ct);
 
     presence.onViewBetaSet = function (beta) {
@@ -318,6 +326,7 @@ function AddMarkingToView(obj, view) {
     };
 
     presence.onViewBetaSet(view.globalBeta);
+    presence._updateColor();
 
     el.addEventListener("pointerover",
         function () {
@@ -327,6 +336,18 @@ function AddMarkingToView(obj, view) {
         function () {
             openPointEdit(presence);
         });
+
+    presence.deletePresence = function() {
+        if (obj.currentEditPanel != null)
+            obj.currentEditPanel.close();
+
+        if (presence.el != null)
+            presence.el.remove();
+        presence.el = null;
+
+        removeFromArr(presence.view.markings, presence);
+        removeFromArr(presence.controller.presences, presence);
+    }
 
     bindElements(el, [presence, presence.controller]);
     activateTemplateInstance(el);
@@ -345,20 +366,37 @@ function AddMarking(obj, positionView) {
             obj.label = label;
             updateBinding(obj, "label");
             //$("[data-binding=label]", el)[0].innerHTML = obj.label;
-        }
+        };
+
+        if (obj.color == null)
+            obj.color = {};
+        if (obj.color.value == null)
+            obj.color.value = "#000";
 
         obj.setColor = function (color) {
-            obj.color = color;
+            if (obj.color.suppressSet)
+                return;
+            obj.color.suppressSet = true;
+            obj.color.value = color;
             //$("[data-binding=centerpoint]", obj.el)[0].style.fill = obj.color;
-            obj.el.style.fill = obj.color;
-            obj.el.dispatchEvent(new CustomEvent("colorchanged", { detail: { color: obj.color, obj: obj } }));
-        }
+            updateBinding(obj, "color");
+            obj._updateColors();
+            delete obj.color.suppressSet;
+            //obj.el.style.fill = obj.color;
+            //obj.el.dispatchEvent(new CustomEvent("colorchanged", { detail: { color: obj.color, obj: obj } }));
+        };
+
+        obj._updateColors = function () {
+            for (let pres of obj.presences) {
+                pres._updateColor();
+            }
+        };
 
         obj.positionView = positionView;
 
         obj.onPositionViewSpeedChanged = function () {
             obj._recalcPositions();
-        }
+        };
 
         positionView.speedDependencies.push(obj.onPositionViewSpeedChanged);
 
@@ -366,23 +404,33 @@ function AddMarking(obj, positionView) {
             obj.x = x;
             updateBinding(obj, "x");
             this._recalcPositions();
-        }
+        };
 
         obj.setCt = function (ct) {
             obj.ct = ct;
             updateBinding(obj, "ct");
             this._recalcPositions();
-        }
+        };
 
         obj._recalcPositions = function () {
             for (let pres of obj.presences) {
                 pres._recalcPosition();
             }
-        }
+        };
+
+        obj.deleteMarking = function () {
+            removeFromArr(autoMarkings, obj);
+
+            while (obj.presences.length > 0) {
+                obj.presences[0].deletePresence();
+            }
+
+            removeFromArr(positionView.speedDependencies, obj.onPositionViewSpeedChanged);
+        };
 
         obj.addToView = function (view) {
             AddMarkingToView(this, view);
-        }
+        };
 
         autoMarkings.push(obj);
 

@@ -110,6 +110,118 @@ function bindContent(el, context, targetName, listeners, applyListeners = true) 
     el.setAttribute("binding-placed", "true");
 }
 
+function removeFromArr(arr, el) {
+    for (let i in arr) {
+        if (arr[i] === el) {
+            arr.splice(i, 1);
+            break;
+        }
+    }
+}
+
+function bindColor(el, context, targetName, listeners, applyListeners = true) {
+    let colorObj = context[targetName];
+
+    if (colorObj.value === undefined)
+        colorObj.value = "#000";
+
+    let swatches = [
+        'rgba(244, 67, 54, 1)',
+        'rgba(233, 30, 99, 0.95)',
+        'rgba(156, 39, 176, 0.9)',
+        'rgba(103, 58, 183, 0.85)',
+        'rgba(63, 81, 181, 0.8)',
+        'rgba(33, 150, 243, 0.75)',
+        'rgba(3, 169, 244, 0.7)',
+        'rgba(0, 188, 212, 0.7)',
+        'rgba(0, 150, 136, 0.75)',
+        'rgba(76, 175, 80, 0.8)',
+        'rgba(139, 195, 74, 0.85)',
+        'rgba(205, 220, 57, 0.9)',
+        'rgba(255, 235, 59, 0.95)',
+        'rgba(255, 193, 7, 1)'
+    ];
+
+    if (colorObj.swatches !== undefined)
+        swatches = colorObj.swatches;
+
+    // Source: https://www.npmjs.com/package/@simonwep/pickr
+    colorObj.pickr = Pickr.create({
+        el: el,
+        theme: 'classic', // or 'monolith', or 'nano'
+        //container: panel.el,
+        comparison: false,
+        default: colorObj.value,
+
+        swatches: swatches,
+
+        components: {
+            // Main components
+            //preview: true,
+            opacity: true,
+            hue: true,
+
+            // Input / output Options
+            interaction: {
+                hex: true,
+                rgba: true,
+                hsla: true,
+                hsva: true,
+                cmyk: true,
+                input: true,
+                clear: false,
+                save: false
+            }
+        }
+    });
+
+    if (context.bindings != null) {
+        if (context.bindings[targetName] == null)
+            context.bindings[targetName] = [];
+
+        context.bindings[targetName].push({
+            el: el,
+            update: () => colorObj.pickr.setColor(colorObj.value)
+        });
+    }
+
+    // let wasAccepted = pickr.setColor(panel.obj.color);
+    // console.log(wasAccepted);
+    // wasAccepted = pickr.applyColor();
+    // console.log(wasAccepted);
+    // console.log(panel.obj.color);
+
+    let funcName = `set${targetName.substr(0, 1).toUpperCase()}${targetName.substr(1)}`;
+    let funcNameLive = `set${targetName.substr(0, 1).toUpperCase()}${targetName.substr(1)}Live`;
+
+    if (!(context[funcName] instanceof Function))
+        return false;
+
+    if (!(context[funcNameLive] instanceof Function))
+        funcNameLive = funcName;
+
+    colorObj.pickr.on("change", function (color, instance) {
+        // let d = new Date();
+        // let timeString = pad(d.getHours(), 2) + ":"
+        //     + pad(d.getMinutes(), 2) + ":"
+        //     + pad(d.getSeconds(), 2);
+
+        //console.log(`[${timeString}] Color changed!`);
+        context[funcNameLive](color.toRGBA().toString(2));
+    });
+
+    colorObj.pickr.on("save", function (color, instance) {
+        // let d = new Date();
+        // let timeString = pad(d.getHours(), 2) + ":"
+        //     + pad(d.getMinutes(), 2) + ":"
+        //     + pad(d.getSeconds(), 2);
+
+        //console.log(`[${timeString}] Color changed!`);
+        context[funcName](color.toRGBA().toString(2));
+    });
+    return true;
+}
+
 function tryBinding(el, viewModel, listenToInput = true) {
     let name = el.getAttribute("data-binding");
     let type = el.getAttribute("binding-type") || "content";
@@ -119,6 +231,8 @@ function tryBinding(el, viewModel, listenToInput = true) {
     if (el.tagName == "INPUT") {
         if (el.type == "button")
             type = "button";
+        else if (el.type == "color")
+            type = "color";
         else
             type = "input";
 
@@ -156,6 +270,10 @@ function tryBinding(el, viewModel, listenToInput = true) {
 
         case "content": {
             return bindContent(el, context, targetName, viewModel.listeners);
+        }
+
+        case "color": {
+            return bindColor(el, context, targetName, viewModel.listeners);
         }
 
         default:
@@ -205,6 +323,10 @@ function updateBinding(struct, name) {
         hand.update();//{ detail: { newValue: struct[name] } });
 }
 
+function newPicker() {
+
+}
+
 function bindPointEditElements(panel) {
     // $("[data-binding=closeButton]", panel.el).on("click", function () {
     //     panel.close();
@@ -246,82 +368,82 @@ function bindPointEditElements(panel) {
     //     }
     // }
 
-    function createColorBinding(name) {
-        let suppressUpdate = false;
+    // function createColorBinding(name) {
+    //     let suppressUpdate = false;
 
-        let targetElements = $(`[data-binding=${name}]`, panel.el).toArray();
-        if (targetElements == 0)
-            return;
+    //     let targetElements = $(`[data-binding=${name}]`, panel.el).toArray();
+    //     if (targetElements.length == 0)
+    //         return;
 
-        if (panel.presence.controller.color === undefined)
-            panel.presence.controller.color = "#000";
+    //     if (panel.presence.controller.color === undefined)
+    //         panel.presence.controller.color = "#000";
 
-        // Source: https://www.npmjs.com/package/@simonwep/pickr
-        const pickr = Pickr.create({
-            el: targetElements[0],
-            theme: 'classic', // or 'monolith', or 'nano'
-            //container: panel.el,
-            comparison: false,
-            default: panel.presence.controller.color,
+    //     // Source: https://www.npmjs.com/package/@simonwep/pickr
+    //     const pickr = Pickr.create({
+    //         el: targetElements[0],
+    //         theme: 'classic', // or 'monolith', or 'nano'
+    //         //container: panel.el,
+    //         comparison: false,
+    //         default: panel.presence.controller.color,
 
-            swatches: [
-                'rgba(244, 67, 54, 1)',
-                'rgba(233, 30, 99, 0.95)',
-                'rgba(156, 39, 176, 0.9)',
-                'rgba(103, 58, 183, 0.85)',
-                'rgba(63, 81, 181, 0.8)',
-                'rgba(33, 150, 243, 0.75)',
-                'rgba(3, 169, 244, 0.7)',
-                'rgba(0, 188, 212, 0.7)',
-                'rgba(0, 150, 136, 0.75)',
-                'rgba(76, 175, 80, 0.8)',
-                'rgba(139, 195, 74, 0.85)',
-                'rgba(205, 220, 57, 0.9)',
-                'rgba(255, 235, 59, 0.95)',
-                'rgba(255, 193, 7, 1)'
-            ],
+    //         swatches: [
+    //             'rgba(244, 67, 54, 1)',
+    //             'rgba(233, 30, 99, 0.95)',
+    //             'rgba(156, 39, 176, 0.9)',
+    //             'rgba(103, 58, 183, 0.85)',
+    //             'rgba(63, 81, 181, 0.8)',
+    //             'rgba(33, 150, 243, 0.75)',
+    //             'rgba(3, 169, 244, 0.7)',
+    //             'rgba(0, 188, 212, 0.7)',
+    //             'rgba(0, 150, 136, 0.75)',
+    //             'rgba(76, 175, 80, 0.8)',
+    //             'rgba(139, 195, 74, 0.85)',
+    //             'rgba(205, 220, 57, 0.9)',
+    //             'rgba(255, 235, 59, 0.95)',
+    //             'rgba(255, 193, 7, 1)'
+    //         ],
 
-            components: {
+    //         components: {
 
-                // Main components
-                //preview: true,
-                opacity: true,
-                hue: true,
+    //             // Main components
+    //             //preview: true,
+    //             opacity: true,
+    //             hue: true,
 
-                // Input / output Options
-                interaction: {
-                    hex: true,
-                    rgba: true,
-                    hsla: true,
-                    hsva: true,
-                    cmyk: true,
-                    input: true,
-                    clear: true,
-                    save: false
-                }
-            }
-        });
+    //             // Input / output Options
+    //             interaction: {
+    //                 hex: true,
+    //                 rgba: true,
+    //                 hsla: true,
+    //                 hsva: true,
+    //                 cmyk: true,
+    //                 input: true,
+    //                 clear: true,
+    //                 save: false
+    //             }
+    //         }
+    //     });
 
-        // let wasAccepted = pickr.setColor(panel.obj.color);
-        // console.log(wasAccepted);
-        // wasAccepted = pickr.applyColor();
-        // console.log(wasAccepted);
-        // console.log(panel.obj.color);
+    //     // let wasAccepted = pickr.setColor(panel.obj.color);
+    //     // console.log(wasAccepted);
+    //     // wasAccepted = pickr.applyColor();
+    //     // console.log(wasAccepted);
+    //     // console.log(panel.obj.color);
 
-        pickr.on("change", function (color, instance) {
-            let d = new Date();
-            let timeString = pad(d.getHours(), 2) + ":"
-                + pad(d.getMinutes(), 2) + ":"
-                + pad(d.getSeconds(), 2);
+    //     pickr.on("change", function (color, instance) {
+    //         let d = new Date();
+    //         let timeString = pad(d.getHours(), 2) + ":"
+    //             + pad(d.getMinutes(), 2) + ":"
+    //             + pad(d.getSeconds(), 2);
 
-            //console.log(`[${timeString}] Color changed!`);
-            panel.presence.controller[`set${name.substr(0, 1).toUpperCase()}${name.substr(1)}`](color.toRGBA().toString(2));
-        });
+    //         //console.log(`[${timeString}] Color changed!`);
+    //         panel.presence.controller[`set${name.substr(0, 1).toUpperCase()}${name.substr(1)}`](color.toRGBA().toString(2));
+    //     });
 
-        panel.pickr = pickr;
-    }
+    //     panel.pickr = pickr;
+    // }
 
     bindElements(panel.el, [panel, panel.presence, panel.presence.controller]);
     //updateFields();
-    createColorBinding("color");
+    //createColorBinding("color");
 }
