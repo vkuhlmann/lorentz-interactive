@@ -69,6 +69,19 @@ function createDiagramCard() {
     diagramView._speedRel = 0;
     diagramView.speedDependencies = [];
 
+    diagramView.svgElem = { el: $("svg[data-id=\"diagram\"]", diagramView.el)[0] };
+    diagramView.svgIndications = { el: $("[data-binding=\"diagram-indications\"]", diagramView.svgElem.el)[0] };
+
+    diagramView.svgIndications.toClientSpace = function (p) {
+        return DOMPoint.fromPoint(p).matrixTransform(diagramView.svgIndications.el.getScreenCTM());
+    };
+
+    diagramView.svgIndications.toSVGSppace = function (p) {
+        let domMat = DOMMatrix.fromMatrix(diagramView.svgIndications.el.getScreenCTM());
+        domMat.invertSelf();
+        return DOMPoint.fromPoint(p).matrixTransform(domMat);
+    }
+
     diagramView.canBaseOn = function (relView) {
         if (this._speedRelRef === null && relView !== this)
             return true;
@@ -77,7 +90,13 @@ function createDiagramCard() {
             b = b._speedRelRef;
         }
         return b === null;
-    }
+    };
+
+    diagramView.svgIndications.addMouseEventListener = function (name, func) {
+        diagramView.svgElem.el.addEventListener(name, function (ev) {
+            return func(ev, diagramView.svgIndications.toSVGSppace({ x: ev.clientX, y: ev.clientY }));
+        }, true);
+    };
 
     diagramView.setSpeed = function (relView, relSpeed = null) {
         if (relView !== this._speedRelRef) {
@@ -127,12 +146,47 @@ function createDiagramCard() {
         }
     };
 
+    diagramView.onClick = function (ev, pos) {
+        //AddMarking({ type: "point", x: pos.x, ct: -pos.y, label: "Yeey!" }, diagramView);
+        if (handleDiagramPointerClick === null)
+            return;
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        return handleDiagramPointerClick(ev, pos, card);
+    };
+
+    diagramView.onPointerOver = function (ev, pos) {
+        if (handleDiagramPointerClick === null)
+            return;
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        if (handleDiagramPointerOver === null)
+            return;
+        return handleDiagramPointerOver(ev, pos, card);
+    };
+
+    diagramView.onPointerLeave = function (ev, pos) {
+        if (handleDiagramPointerClick === null)
+            return;
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        if (handleDiagramPointerLeave === null)
+            return;
+        return handleDiagramPointerLeave(ev, pos, card);
+    };
+
     if (views.length > 0)
         diagramView.setSpeed(views[0], 0);
     else
         diagramView.setSpeed(null, 0);
 
     views.push(diagramView);
+
+    diagramView.svgIndications.addMouseEventListener("click", diagramView.onClick);
+    diagramView.svgIndications.addMouseEventListener("pointerover", diagramView.onPointerOver);
 
     let card = { diagramView: diagramView, el: createTemplateInstance("card", $("#cardsholder")[0]) };
     card.viewSpeedControl = { el: $("[data-id=viewSpeedControl]", card.el)[0] };
@@ -327,6 +381,22 @@ function setCardColumns(colCount, fixWidth = false) {
     }
 }
 
+function viewAddPoint(view, coordinate) {
+
+}
+
+function setDiagramHandle(handlers) {
+    if (handleDiagramDismiss !== null)
+        handleDiagramDismiss();
+
+    handleDiagramPointerOver = handlers["pointerover"] ?? null;
+    handleDiagramPointerLeave = handlers["pointerleave"] ?? null;
+    handleDiagramPointerClick = handlers["click"] ?? null;
+    handleDiagramDismiss = handlers["dismiss"] ?? null;
+}
+
+let isPointAddModus;
+
 function createLayout() {
     createDiagramCard();
     createDiagramCard();
@@ -349,7 +419,7 @@ function createLayout() {
 
     maxColumnCount = null;
     isColumnWidthFixed = false;
-
+    isPointAddModus = false;
 
     $("#max-columns").on("input", function (ev) {
         let val = $("#max-columns")[0].value;
@@ -369,6 +439,32 @@ function createLayout() {
             $("#columns-fixwidth").removeClass("btn-outline-info");
         }
         setCardColumns(maxColumnCount, isColumnWidthFixed);
+    });
+
+    let toggleAddPoint = function () {
+        if (isPointAddModus) {
+            setDiagramHandle({});
+        } else {
+            $("#interaction-addpoint").addClass("btn-primary");
+            $("#interaction-addpoint").removeClass("btn-outline-info");
+
+            isPointAddModus = true;
+            setDiagramHandle({
+                click: function (event, pos, card) {
+                    AddMarking({ type: "point", x: pos.x, ct: -pos.y, label: "Yeey!" }, card.diagramView);
+                    setDiagramHandle({});
+                },
+                dismiss: function () {
+                    isPointAddModus = false;
+                    $("#interaction-addpoint").addClass("btn-outline-info");
+                    $("#interaction-addpoint").removeClass("btn-primary");
+                }
+            });
+        }
+    }
+
+    $("#interaction-addpoint").click(function (ev) {
+        toggleAddPoint();
     });
 
     setCardColumns(4, false);

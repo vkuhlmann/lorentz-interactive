@@ -23,6 +23,10 @@
 
 let markingID = 0;
 let openPanels = [];
+let handleDiagramPointerOver = null;
+let handleDiagramPointerLeave = null;
+let handleDiagramPointerClick = null;
+let handleDiagramDismiss = null;
 
 function setTopPanel(panel) {
     let zIndex = 2;
@@ -332,7 +336,7 @@ function AddMarkingToView(obj, view) {
         function () {
             hoverPointEdit(presence);
         });
-    el.addEventListener("pointerdown",
+    el.addEventListener("click",
         function () {
             openPointEdit(presence);
         });
