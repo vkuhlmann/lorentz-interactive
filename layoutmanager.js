@@ -21,6 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+let instantiationIndex = 0;
+
 function createTemplateInstance(template, container, activeOnAdd = false) {
     let el;
     if (typeof (template) == "string") {
@@ -34,8 +36,15 @@ function createTemplateInstance(template, container, activeOnAdd = false) {
         modifyNodes.push(el);
 
     for (let modifyNode of modifyNodes) {
-        modifyNode.setAttribute("data-id", modifyNode.getAttribute("id"));
-        modifyNode.removeAttribute("id");
+        let origID = modifyNode.getAttribute("id");
+        modifyNode.setAttribute("data-id", origID);
+        let newID = origID + "-" + instantiationIndex.toString();
+        instantiationIndex += 1;
+        modifyNode.setAttribute("id", newID);
+        modifyNode.id = newID;
+
+        $(`[marker-end=\"url(#${origID})\"]`).attr("marker-end", `url(#${newID})`);
+        $(`[href=\"#${origID}\"]`).attr("href", `#${newID}`);
     }
 
     if (!activeOnAdd)
