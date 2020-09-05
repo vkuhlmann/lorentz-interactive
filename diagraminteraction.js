@@ -152,6 +152,7 @@ function createPanelFromTemplate(template, view) {
 
     panel.moving = false;
     $(".panel-grip", panel.el).on("pointerdown", function (ev) {
+        this.setPointerCapture(ev.pointerId);
         panel.moving = true;
         this.style.cursor = "move";
 
@@ -168,6 +169,7 @@ function createPanelFromTemplate(template, view) {
         this.addEventListener("pointermove", onMove);
 
         this.addEventListener("pointerup", function () {
+            this.releasePointerCapture(ev.pointerId);
             panel.moving = false;
             this.style.cursor = "auto";
             this.removeEventListener("pointermove", onMove);
