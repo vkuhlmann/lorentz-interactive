@@ -63,7 +63,7 @@ let cards = [];
 
 function createDiagramCard() {
     let diagramView = { el: createTemplateInstance("diagram-view", null, true), markings: [],
-        zoom: 1.0 };
+        zoom: 1.0, panOffset: {x: 0, ct: 0} };
     diagramView.highlight = { el: $("[data-id=diagram-highlight]", diagramView.el)[0] };
 
     diagramView._speedRelRef = undefined;
@@ -72,15 +72,25 @@ function createDiagramCard() {
 
     diagramView.svgElem = { el: $("svg[data-id=\"diagram\"]", diagramView.el)[0] };
     diagramView.svgIndications = { el: $("[data-binding=\"diagram-indications\"]", diagramView.svgElem.el)[0] };
+    diagramView.coordinatePlaced = { el: $("[data-id=\"coordinatePlaced\"]", diagramView.svgElem.el)[0] };
 
-    diagramView.svgIndications.toClientSpace = function (p) {
-        return DOMPoint.fromPoint(p).matrixTransform(diagramView.svgIndications.el.getScreenCTM());
+    diagramView.coordinatePlaced.toClientSpace = function (p) {
+        return DOMPoint.fromPoint(p).matrixTransform(new DOMMatrix().scaleSelf(1/diagramView.zoom, 1/diagramView.zoom, 1,
+            0, 0, 0).preMultiplySelf(diagramView.svgIndications.el.getScreenCTM()));
     };
 
-    diagramView.svgIndications.toSVGSppace = function (p) {
-        let domMat = DOMMatrix.fromMatrix(diagramView.svgIndications.el.getScreenCTM());
+    diagramView.coordinatePlaced.toSVGSppace = function (p) {
+        // let domMat = DOMMatrix.fromMatrix(diagramView.svgIndications.el.getScreenCTM()).scaleSelf(1/diagramView.zoom, 1/diagramView.zoom, 1,
+        //     0, 0, 0);
+        let domMat = new DOMMatrix().scaleSelf(1/diagramView.zoom, 1/diagramView.zoom, 1,
+            0, 0, 0).preMultiplySelf(diagramView.svgIndications.el.getScreenCTM())
         domMat.invertSelf();
         return DOMPoint.fromPoint(p).matrixTransform(domMat);
+    }
+
+    diagramView.pannableContent = {el: $("[data-id=\"pannableContent\"]", diagramView.svgElem.el)[0]};
+    diagramView.pannableContent.setTranslation = function (x, y) {
+        diagramView.pannableContent.el.setAttribute("transform", `translate(${x} ${y})`);
     }
 
     diagramView.canBaseOn = function (relView) {
@@ -95,7 +105,7 @@ function createDiagramCard() {
 
     diagramView.svgIndications.addMouseEventListener = function (name, func) {
         diagramView.svgElem.el.addEventListener(name, function (ev) {
-            return func(ev, diagramView.svgIndications.toSVGSppace({ x: ev.clientX, y: ev.clientY }));
+            return func(ev, diagramView.coordinatePlaced.toSVGSppace({ x: ev.clientX, y: ev.clientY }));
         }, true);
     };
 
@@ -147,37 +157,57 @@ function createDiagramCard() {
         }
     };
 
-    diagramView.onClick = function (ev, pos) {
-        //AddMarking({ type: "point", x: pos.x, ct: -pos.y, label: "Yeey!" }, diagramView);
-        if (handleDiagramPointerClick === null)
-            return;
-        ev.preventDefault();
-        ev.stopPropagation();
+    // diagramView.onClick = function (ev, pos) {
+    //     //AddMarking({ type: "point", x: pos.x, ct: -pos.y, label: "Yeey!" }, diagramView);
+    //     //if (handleDiagramPointerClick === null)
+    //     //    return;
+    //     if (!handleDiagramAvailable)
+    //         return;
+    //     ev.preventDefault();
+    //     ev.stopPropagation();
 
-        return handleDiagramPointerClick(ev, pos, card);
-    };
+    //     if (handleDiagram["click"] == null)
+    //         return;
+    //     return handleDiagram["click"](ev, pos, card);
+    // };
 
-    diagramView.onPointerOver = function (ev, pos) {
-        if (handleDiagramPointerClick === null)
-            return;
-        ev.preventDefault();
-        ev.stopPropagation();
+    // diagramView.onPointerOver = function (ev, pos) {
+    //     if (handleDiagramPointerClick === null)
+    //         return;
+    //     ev.preventDefault();
+    //     ev.stopPropagation();
 
-        if (handleDiagramPointerOver === null)
-            return;
-        return handleDiagramPointerOver(ev, pos, card);
-    };
+    //     if (handleDiagramPointerOver === null)
+    //         return;
+    //     return handleDiagramPointerOver(ev, pos, card);
+    // };
 
-    diagramView.onPointerLeave = function (ev, pos) {
-        if (handleDiagramPointerClick === null)
-            return;
-        ev.preventDefault();
-        ev.stopPropagation();
+    // diagramView.onPointerLeave = function (ev, pos) {
+    //     if (handleDiagramPointerClick === null)
+    //         return;
+    //     ev.preventDefault();
+    //     ev.stopPropagation();
 
-        if (handleDiagramPointerLeave === null)
-            return;
-        return handleDiagramPointerLeave(ev, pos, card);
-    };
+    //     if (handleDiagramPointerLeave === null)
+    //         return;
+    //     return handleDiagramPointerLeave(ev, pos, card);
+    // };
+
+    diagramView.addGlobalDiagramMouseEvent = function(eventName) {
+        let f = function (ev, pos) {
+            if (!handleDiagramAvailable)
+                return;
+            ev.preventDefault();
+            ev.stopPropagation();
+    
+            if (handleDiagram[eventName] == null)
+                return;
+            return handleDiagram[eventName](ev, pos, card);
+        };
+        diagramView["handleGlobal" + eventName] = f;
+
+        diagramView.svgIndications.addMouseEventListener(eventName, f);
+    }
 
     if (views.length > 0)
         diagramView.setSpeed(views[0], 0);
@@ -186,8 +216,23 @@ function createDiagramCard() {
 
     views.push(diagramView);
 
-    diagramView.svgIndications.addMouseEventListener("click", diagramView.onClick);
-    diagramView.svgIndications.addMouseEventListener("pointerover", diagramView.onPointerOver);
+    // pointerover: null,
+    // pointerleave: null,
+    // click: null,
+    // pointerdown: null,
+    // pointerup: null,
+    // pointermove: null,
+    // dismiss: null
+
+    diagramView.addGlobalDiagramMouseEvent("click");
+    diagramView.addGlobalDiagramMouseEvent("pointerover");
+    diagramView.addGlobalDiagramMouseEvent("pointerleave");
+    diagramView.addGlobalDiagramMouseEvent("pointerdown");
+    diagramView.addGlobalDiagramMouseEvent("pointerup");
+    diagramView.addGlobalDiagramMouseEvent("pointermove");
+
+    //diagramView.svgIndications.addMouseEventListener("click", diagramView.onClick);
+    //diagramView.svgIndications.addMouseEventListener("pointerover", diagramView.onPointerOver);
 
     let card = { diagramView: diagramView, el: createTemplateInstance("card", $("#cardsholder")[0]) };
     card.viewSpeedControl = { el: $("[data-id=viewSpeedControl]", card.el)[0] };
@@ -251,9 +296,7 @@ function createDiagramCard() {
 
     card.zoomSet = function (value = 1.0) {
         card.diagramView.zoom = value;
-        for (let m of card.diagramView.markings) {
-            m.updatePosition();
-        }
+        card.updatePositioning();
     }
 
     card.zoomIncrease = function (frac = 0.1) {
@@ -262,6 +305,20 @@ function createDiagramCard() {
 
     card.zoomDecrease = function (frac = 0.1) {
         this.zoomSet(card.diagramView.zoom - frac);
+    }
+
+    card.setPanOffset = function (x, ct) {
+        card.diagramView.panOffset = {x: x, ct: ct};
+        card.updatePositioning();
+    }
+
+    card.updatePositioning = function () {
+        card.diagramView.pannableContent.setTranslation(
+            -card.diagramView.panOffset.x * card.diagramView.zoom,
+            -card.diagramView.panOffset.ct * card.diagramView.zoom);
+        for (let m of card.diagramView.markings) {
+            m.updatePosition();
+        }
     }
 
     bindElements(card.el, card);
@@ -398,21 +455,24 @@ function setCardColumns(colCount, fixWidth = false) {
     }
 }
 
-function viewAddPoint(view, coordinate) {
-
-}
-
 function setDiagramHandle(handlers) {
-    if (handleDiagramDismiss !== null)
-        handleDiagramDismiss();
+    if (handleDiagramAvailable && handleDiagram["dismiss"] != null)
+        handleDiagram["dismiss"]();
 
-    handleDiagramPointerOver = handlers["pointerover"] ?? null;
-    handleDiagramPointerLeave = handlers["pointerleave"] ?? null;
-    handleDiagramPointerClick = handlers["click"] ?? null;
-    handleDiagramDismiss = handlers["dismiss"] ?? null;
+    // handleDiagramPointerOver = handlers["pointerover"] ?? null;
+    // handleDiagramPointerLeave = handlers["pointerleave"] ?? null;
+    // handleDiagramPointerClick = handlers["click"] ?? null;
+    // handleDiagramDismiss = handlers["dismiss"] ?? null;
+    // handleDiagramPointerDown = handlers["pointerdown"] ?? null;
+    // handleDiagramPointerUp = handlers["pointerup"] ?? null;
+    // handleDiagramPointerMove = handlers["pointermove"] ?? null;
+
+    handleDiagram = handlers;
+    handleDiagramAvailable = handlers != null && Object.keys(handlers).length > 0;
 }
 
 let isPointAddModus;
+let isPanModus;
 
 function createLayout() {
     createDiagramCard();
@@ -482,6 +542,68 @@ function createLayout() {
 
     $("#interaction-addpoint").click(function (ev) {
         toggleAddPoint();
+    });
+
+    let togglePan = function () {
+        if (isPanModus) {
+            setDiagramHandle({});
+        } else {
+            $("#interaction-pan").addClass("btn-primary");
+            $("#interaction-pan").removeClass("btn-outline-info");
+
+            $(".pannable-diagram").css("cursor", "all-scroll");
+
+            isPanModus = true;
+            let transfMatrix = null;
+            let originalOffset;
+            let grapPoint;
+
+            setDiagramHandle({
+                pointerdown: function (event, pos, card) {
+                    event.target.setPointerCapture(event.pointerID);
+                    originalOffset = { x: card.diagramView.panOffset.x, y: -card.diagramView.panOffset.ct };
+                    //transfMatrix = new DOMMatrix().translateSelf(-pos.x, -pos.y);//.translateSelf(card.diagramView.panOffset.x, card.diagramView.panOffset.y);
+                    grapPoint = DOMPoint.fromPoint(pos);
+                    //let point = DOMPoint.fromPoint(pos);
+                    //point = point.matrixTransform(new DOMMatrix().scaleSelf(-1.0, -1.0)).matrixTransform(new DOMMatrix().translateSelf(card.diagramView.panOffset.x, -card.diagramView.panOffset.ct));
+                    //transfMatrix = new DOMMatrix().translateSelf(-point.x, -point.y);
+                    //transfMatrix = new DOMMatrix().translateSelf(card.diagramView.panOffset.x, -card.diagramView.panOffset.ct).multiplySelf(new DOMMatrix().translateSelf(-grapPoint.x, -grapPoint.y));
+                    transfMatrix = new DOMMatrix().translateSelf(-grapPoint.x, -grapPoint.y);
+                },
+                pointerup: function (event, pos, card) {
+                    transfMatrix = null;
+                    event.target.releasePointerCapture(event.pointerID);
+                }, 
+                pointermove: function (event, pos, card) {
+                    if (transfMatrix !== null) {
+                        let point = DOMPoint.fromPoint(pos);
+                        point = point.matrixTransform(new DOMMatrix().translateSelf(-card.diagramView.panOffset.x, -card.diagramView.panOffset.ct));
+                        //point = point.matrixTransform(new DOMMatrix().translateSelf(card.diagramView.panOffset.x, -card.diagramView.panOffset.ct));
+                        let panOffset = point.matrixTransform(transfMatrix);
+
+                        //point = point.matrixTransform(transfMatrix.preMultiplySelf(new DOMMatrix().translateSelf(card.diagramView.panOffset.x, -card.diagramView.panOffset.ct))
+                        //    .preMultiplySelf(new DOMMatrix().scaleSelf(1.0, -1.0)));
+                        //transfMatrix = new DOMMatrix().translateSelf(-point.x, -point.y);
+                        card.setPanOffset(-panOffset.x, -panOffset.y);
+                    }
+                },
+                click: function (event, pos, card) {
+                    //AddMarking({ type: "point", x: pos.x, ct: -pos.y, label: "Yeey!" }, card.diagramView);
+                    //setDiagramHandle({});
+                },
+                dismiss: function () {
+                    isPanModus = false;
+                    $(".pannable-diagram").css("cursor", "");
+
+                    $("#interaction-pan").addClass("btn-outline-info");
+                    $("#interaction-pan").removeClass("btn-primary");
+                }
+            });
+        }
+    }
+
+    $("#interaction-pan").click(function (ev) {
+        togglePan();
     });
 
     setCardColumns(4, false);

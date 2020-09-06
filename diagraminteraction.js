@@ -23,10 +23,17 @@
 
 let markingID = 0;
 let openPanels = [];
-let handleDiagramPointerOver = null;
-let handleDiagramPointerLeave = null;
-let handleDiagramPointerClick = null;
-let handleDiagramDismiss = null;
+
+let handleDiagram = {
+    pointerover: null,
+    pointerleave: null,
+    click: null,
+    pointerdown: null,
+    pointerup: null,
+    pointermove: null,
+    dismiss: null
+}
+let handleDiagramAvailable = false;
 
 function setTopPanel(panel) {
     let zIndex = 2;
