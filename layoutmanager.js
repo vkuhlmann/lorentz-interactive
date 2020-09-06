@@ -62,7 +62,8 @@ function activateTemplateInstance(el) {
 let cards = [];
 
 function createDiagramCard() {
-    let diagramView = { el: createTemplateInstance("diagram-view", null, true), markings: [] };
+    let diagramView = { el: createTemplateInstance("diagram-view", null, true), markings: [],
+        zoom: 1.0 };
     diagramView.highlight = { el: $("[data-id=diagram-highlight]", diagramView.el)[0] };
 
     diagramView._speedRelRef = undefined;
@@ -248,8 +249,24 @@ function createDiagramCard() {
         card.viewSpeedControl = null;
     };
 
+    card.zoomSet = function (value = 1.0) {
+        card.diagramView.zoom = value;
+        for (let m of card.diagramView.markings) {
+            m.updatePosition();
+        }
+    }
+
+    card.zoomIncrease = function (frac = 0.1) {
+        this.zoomSet(card.diagramView.zoom + frac);
+    }
+
+    card.zoomDecrease = function (frac = 0.1) {
+        this.zoomSet(card.diagramView.zoom - frac);
+    }
+
     bindElements(card.el, card);
     card.viewSpeedControl.sliders = [];
+    card.zoomSet(1.0);
 
     card.addCardLink = function (other) {
         let slider = {

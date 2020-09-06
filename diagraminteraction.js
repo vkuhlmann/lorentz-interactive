@@ -300,7 +300,7 @@ function AddMarkingToView(obj, view) {
         this.ct = ct;
         //obj.x = x;
         //obj.ct = ct;
-        this.el.setAttribute("transform", `translate(${x} ${-ct})`);
+        this.el.setAttribute("transform", `translate(${x * view.zoom} ${-ct * view.zoom})`);
     };
 
     presence._setColor = function (c) {
@@ -317,6 +317,10 @@ function AddMarkingToView(obj, view) {
         this.viewBeta = beta;
         this._recalcPosition();
     }
+
+    presence.updatePosition = function () {
+        presence._recalcPosition();
+    };
 
     presence._recalcPosition = function () {
         this.baseTransfBeta =
