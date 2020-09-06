@@ -284,7 +284,7 @@ let nextViewID = 0;
 
 function AddMarkingToView(obj, view) {
     diagramIndications = $("[data-binding=diagram-indications]", view.el)[0];
-    let el = createTemplateInstance("pointmarker", diagramIndications);
+    let el = createTemplateInstance("template-pointmarker", diagramIndications);
 
     let presence = { view: view, el: el, controller: obj, bindings: [] };
 
