@@ -62,8 +62,10 @@ function activateTemplateInstance(el) {
 let cards = [];
 
 function createDiagramCard() {
-    let diagramView = { el: createTemplateInstance("diagram-view", null, true), markings: [],
-        zoom: 1.0, panOffset: {x: 0, ct: 0} };
+    let diagramView = {
+        el: createTemplateInstance("diagram-view", null, true), markings: [],
+        zoom: 1.0, panOffset: { x: 0, y: 0 }
+    };
     diagramView.highlight = { el: $("[data-id=diagram-highlight]", diagramView.el)[0] };
 
     diagramView._speedRelRef = undefined;
@@ -75,20 +77,16 @@ function createDiagramCard() {
     diagramView.coordinatePlaced = { el: $("[data-id=\"coordinatePlaced\"]", diagramView.svgElem.el)[0] };
 
     diagramView.coordinatePlaced.toClientSpace = function (p) {
-        return DOMPoint.fromPoint(p).matrixTransform(new DOMMatrix().scaleSelf(1/diagramView.zoom, 1/diagramView.zoom, 1,
-            0, 0, 0).preMultiplySelf(diagramView.svgIndications.el.getScreenCTM()));
+        return DOMPoint.fromPoint(p).matrixTransform(new DOMMatrix().scaleSelf(diagramView.zoom, diagramView.zoom).preMultiplySelf(diagramView.svgIndications.el.getScreenCTM()));
     };
 
     diagramView.coordinatePlaced.toSVGSppace = function (p) {
-        // let domMat = DOMMatrix.fromMatrix(diagramView.svgIndications.el.getScreenCTM()).scaleSelf(1/diagramView.zoom, 1/diagramView.zoom, 1,
-        //     0, 0, 0);
-        let domMat = new DOMMatrix().scaleSelf(1/diagramView.zoom, 1/diagramView.zoom, 1,
-            0, 0, 0).preMultiplySelf(diagramView.svgIndications.el.getScreenCTM())
+        let domMat = new DOMMatrix().scaleSelf(diagramView.zoom, diagramView.zoom).preMultiplySelf(diagramView.svgIndications.el.getScreenCTM())
         domMat.invertSelf();
         return DOMPoint.fromPoint(p).matrixTransform(domMat);
     }
 
-    diagramView.pannableContent = {el: $("[data-id=\"pannableContent\"]", diagramView.svgElem.el)[0]};
+    diagramView.pannableContent = { el: $("[data-id=\"pannableContent\"]", diagramView.svgElem.el)[0] };
     diagramView.pannableContent.setTranslation = function (x, y) {
         diagramView.pannableContent.el.setAttribute("transform", `translate(${x} ${y})`);
     }
@@ -193,13 +191,13 @@ function createDiagramCard() {
     //     return handleDiagramPointerLeave(ev, pos, card);
     // };
 
-    diagramView.addGlobalDiagramMouseEvent = function(eventName) {
+    diagramView.addGlobalDiagramMouseEvent = function (eventName) {
         let f = function (ev, pos) {
             if (!handleDiagramAvailable)
                 return;
             ev.preventDefault();
             ev.stopPropagation();
-    
+
             if (handleDiagram[eventName] == null)
                 return;
             return handleDiagram[eventName](ev, pos, card);
@@ -230,6 +228,7 @@ function createDiagramCard() {
     diagramView.addGlobalDiagramMouseEvent("pointerdown");
     diagramView.addGlobalDiagramMouseEvent("pointerup");
     diagramView.addGlobalDiagramMouseEvent("pointermove");
+    diagramView.addGlobalDiagramMouseEvent("wheel");
 
     //diagramView.svgIndications.addMouseEventListener("click", diagramView.onClick);
     //diagramView.svgIndications.addMouseEventListener("pointerover", diagramView.onPointerOver);
@@ -295,7 +294,7 @@ function createDiagramCard() {
     };
 
     card.zoomSet = function (value = 1.0) {
-        card.diagramView.zoom = value;
+        card.diagramView.zoom = Math.max(value, 1e-5);
         card.updatePositioning();
     }
 
@@ -307,15 +306,15 @@ function createDiagramCard() {
         this.zoomSet(card.diagramView.zoom - frac);
     }
 
-    card.setPanOffset = function (x, ct) {
-        card.diagramView.panOffset = {x: x, ct: ct};
+    card.setPanOffset = function (x, y) {
+        card.diagramView.panOffset = { x: x, y: y };
         card.updatePositioning();
     }
 
     card.updatePositioning = function () {
         card.diagramView.pannableContent.setTranslation(
             -card.diagramView.panOffset.x * card.diagramView.zoom,
-            -card.diagramView.panOffset.ct * card.diagramView.zoom);
+            -card.diagramView.panOffset.y * card.diagramView.zoom);
         for (let m of card.diagramView.markings) {
             m.updatePosition();
         }
@@ -561,35 +560,31 @@ function createLayout() {
             setDiagramHandle({
                 pointerdown: function (event, pos, card) {
                     event.target.setPointerCapture(event.pointerID);
-                    originalOffset = { x: card.diagramView.panOffset.x, y: -card.diagramView.panOffset.ct };
-                    //transfMatrix = new DOMMatrix().translateSelf(-pos.x, -pos.y);//.translateSelf(card.diagramView.panOffset.x, card.diagramView.panOffset.y);
+                    originalOffset = { x: card.diagramView.panOffset.x, y: card.diagramView.panOffset.y };
                     grapPoint = DOMPoint.fromPoint(pos);
-                    //let point = DOMPoint.fromPoint(pos);
-                    //point = point.matrixTransform(new DOMMatrix().scaleSelf(-1.0, -1.0)).matrixTransform(new DOMMatrix().translateSelf(card.diagramView.panOffset.x, -card.diagramView.panOffset.ct));
-                    //transfMatrix = new DOMMatrix().translateSelf(-point.x, -point.y);
-                    //transfMatrix = new DOMMatrix().translateSelf(card.diagramView.panOffset.x, -card.diagramView.panOffset.ct).multiplySelf(new DOMMatrix().translateSelf(-grapPoint.x, -grapPoint.y));
-                    transfMatrix = new DOMMatrix().translateSelf(-grapPoint.x, -grapPoint.y);
+                    transfMatrix = new DOMMatrix().translateSelf(-grapPoint.x, -grapPoint.y).preMultiplySelf(new DOMMatrix().scaleSelf(-1, -1));
                 },
                 pointerup: function (event, pos, card) {
                     transfMatrix = null;
                     event.target.releasePointerCapture(event.pointerID);
-                }, 
+                },
                 pointermove: function (event, pos, card) {
                     if (transfMatrix !== null) {
                         let point = DOMPoint.fromPoint(pos);
-                        point = point.matrixTransform(new DOMMatrix().translateSelf(-card.diagramView.panOffset.x, -card.diagramView.panOffset.ct));
-                        //point = point.matrixTransform(new DOMMatrix().translateSelf(card.diagramView.panOffset.x, -card.diagramView.panOffset.ct));
-                        let panOffset = point.matrixTransform(transfMatrix);
+                        point = point.matrixTransform(transfMatrix)
+                            .matrixTransform(new DOMMatrix().translateSelf(card.diagramView.panOffset.x, card.diagramView.panOffset.y));
 
-                        //point = point.matrixTransform(transfMatrix.preMultiplySelf(new DOMMatrix().translateSelf(card.diagramView.panOffset.x, -card.diagramView.panOffset.ct))
-                        //    .preMultiplySelf(new DOMMatrix().scaleSelf(1.0, -1.0)));
-                        //transfMatrix = new DOMMatrix().translateSelf(-point.x, -point.y);
-                        card.setPanOffset(-panOffset.x, -panOffset.y);
+                        card.setPanOffset(point.x, point.y);
                     }
                 },
-                click: function (event, pos, card) {
-                    //AddMarking({ type: "point", x: pos.x, ct: -pos.y, label: "Yeey!" }, card.diagramView);
-                    //setDiagramHandle({});
+                wheel: function(event, pos, card) {
+                    let scrollAmount = event.deltaY;
+                    if (event.deltaMode == 1) {
+                        scrollAmount = -0.1 * scrollAmount / 10;
+                    } else {
+                        scrollAmount = scrollAmount / 1000;
+                    }
+                    card.zoomIncrease(scrollAmount);
                 },
                 dismiss: function () {
                     isPanModus = false;
