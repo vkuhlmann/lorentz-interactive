@@ -479,7 +479,7 @@ let maxColumnCount;
 
 function setCardColumns(colCount, fixWidth = false) {
     let selector = "#cardsholder > .lorentz-card";
-    maxColumnCount = colCount;
+    maxColumnCount = Math.max(parseInt(colCount ?? 0), 1);
     isColumnWidthFixed = fixWidth;
 
     if (maxColumnCount == null) {
@@ -515,6 +515,34 @@ function setDiagramHandle(handlers) {
 
 let isPointAddModus;
 let isPanModus;
+let nextLabel = "";
+let isClearNextLabel;
+
+function takeNextLabel() {
+    let value = nextLabel;
+    if (nextLabel.length === 1) {
+        let charcodeDiff = nextLabel.charCodeAt(0) - "A".charCodeAt(0);
+
+        if (charcodeDiff >= 0 && charcodeDiff < 26)
+            setNextLabel(String.fromCharCode("A".charCodeAt(0) + ((charcodeDiff + 1) % 26)));
+    }
+    return value;
+}
+
+function setNextLabel(val) {
+    nextLabel = val.trim();
+    if (nextLabel.length > 0) {
+        $("#nextlabel-clear").addClass("btn-outline-info");
+        $("#nextlabel-clear").removeClass("btn-primary");
+        isClearNextLabel = false;
+    }
+    if (isClearNextLabel) {
+        $("#nextlabel").css("color", "gray");
+    } else {
+        $("#nextlabel").css("color", "");
+        $("#nextlabel")[0].value = val;
+    }
+}
 
 function createLayout() {
     createDiagramCard();
@@ -539,11 +567,18 @@ function createLayout() {
     maxColumnCount = null;
     isColumnWidthFixed = false;
     isPointAddModus = false;
+    isClearNextLabel = false;
 
+    $("#max-columns-minus").click(function (ev) {
+        setCardColumns((maxColumnCount ?? 2) - 1, isColumnWidthFixed);
+    });
     $("#max-columns").on("input", function (ev) {
         let val = $("#max-columns")[0].value;
         maxColumnCount = (val == "") ? null : parseFloat(val);
         setCardColumns(maxColumnCount, isColumnWidthFixed);
+    });
+    $("#max-columns-plus").click(function (ev) {
+        setCardColumns((maxColumnCount ?? 0) + 1, isColumnWidthFixed);
     });
 
     $("#columns-fixwidth").click(function (ev) {
@@ -570,7 +605,7 @@ function createLayout() {
             isPointAddModus = true;
             setDiagramHandle({
                 click: function (event, pos, card) {
-                    PointMarking.create({ type: "point", x: pos.x, ct: -pos.y, label: "Yeey!" }, card.diagramView);
+                    PointMarking.create({ type: "point", x: pos.x, ct: -pos.y, label: takeNextLabel() }, card.diagramView);
                     setDiagramHandle({});
                 },
                 dismiss: function () {
@@ -645,6 +680,26 @@ function createLayout() {
         togglePan();
     });
 
+    $("#nextlabel").on("input", function (ev) {
+        let val = $("#nextlabel")[0].value;
+        setNextLabel(val);
+    });
+
+    $("#nextlabel-clear").click(function (ev) {
+        if (isClearNextLabel) {
+            let val = $("#nextlabel")[0].value.trim();
+            if (val.length == 0)
+                val = "A";
+            setNextLabel(val);
+        } else {
+            isClearNextLabel = true;
+            setNextLabel("");
+            $("#nextlabel-clear").addClass("btn-primary");
+            $("#nextlabel-clear").removeClass("btn-outline-info");
+        }
+    });
+
     setCardColumns(4, false);
+    setNextLabel("A");
 }
 

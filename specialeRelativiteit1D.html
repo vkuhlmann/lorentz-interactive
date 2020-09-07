@@ -124,6 +124,11 @@ SOFTWARE.
 			opacity: 0.5;
 		}
 
+		.buttonIcon {
+			height: 1.3em;
+			width: auto;
+		}
+
 		/*[data-id="template-relspeed"].relspeed-active [data-id="relspeed-slider"] {
 			background-color: red;
 		}*/
@@ -431,7 +436,7 @@ SOFTWARE.
 			</div>
 
 			<div id="card" style="display:block;background-color:#ddd" class="lorentz-card card template">
-				<div class="card-header">
+				<div class="card-header" style="overflow:auto;">
 					<table style="border:0px;">
 						<tr>
 							<td style="width:100%;">
@@ -449,7 +454,7 @@ SOFTWARE.
 							<td>
 								<button class="btn btn-outline-primary" id="card-zoomin" data-binding="zoomIncrease">
 									<!-- From Bootstrap Icons, used under MIT license -->
-									<svg width="1.3em" height="1.3em" viewBox="0 0 16 16" class="bi bi-zoom-in"
+									<svg viewBox="0 0 16 16" class="bi bi-zoom-in buttonIcon"
 										fill="currentColor" xmlns="http://www.w3.org/2000/svg">
 										<path fill-rule="evenodd"
 											d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z" />
@@ -463,7 +468,7 @@ SOFTWARE.
 							<td>
 								<button class="btn btn-outline-primary" id="card-zoomout" data-binding="zoomDecrease">
 									<!-- From Bootstrap Icons, used under MIT license -->
-									<svg width="1.3em" height="1.3em" viewBox="0 0 16 16" class="bi bi-zoom-out"
+									<svg viewBox="0 0 16 16" class="bi bi-zoom-out buttonIcon"
 										fill="currentColor" xmlns="http://www.w3.org/2000/svg">
 										<path fill-rule="evenodd"
 											d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z" />
@@ -477,7 +482,7 @@ SOFTWARE.
 							<td>
 								<button class="btn btn-outline-primary" id="card-delete" data-binding="deleteCard">
 									<!-- From Bootstrap Icons, used under MIT license -->
-									<svg width="1.3em" height="1.3em" viewBox="0 0 16 16" class="bi bi-trash"
+									<svg viewBox="0 0 16 16" class="bi bi-trash buttonIcon"
 										fill="currentColor" xmlns="http://www.w3.org/2000/svg">
 										<path
 											d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
@@ -514,7 +519,7 @@ SOFTWARE.
 			</div>
 
 			<nav class="navbar navbar-expand-sm bg-light navbar-light" style="margin-bottom:10px;">
-				<ul class="navbar-nav">
+				<ul class="navbar-nav" style="overflow:auto;">
 					<!--<li class="nav-item active">
 						<a class="nav-link" href="#">Active</a>
 					</li>-->
@@ -530,10 +535,28 @@ SOFTWARE.
 						<button id="addcardbutton" type="button" class="btn btn-primary"
 						id="columns-auto">Auto</button>
 					</li>-->
+
 					<li class="nav-item" style="margin-left:10px;">
-						<input type="text" class="form-control" id="max-columns" />
+						<button class="btn btn-outline-primary" id="max-columns-minus">
+							<!-- From Bootstrap Icons, used under MIT license -->
+							<svg viewBox="0 0 16 16" class="bi bi-dash buttonIcon" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+								<path fill-rule="evenodd" d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
+							</svg>
+						</button>
 					</li>
 					<li class="nav-item">
+						<input type="text" class="form-control" id="max-columns" style="width:4em;" />
+					</li>
+					<li class="nav-item">
+						<button class="btn btn-outline-primary" id="max-columns-plus">
+							<!-- From Bootstrap Icons, used under MIT license -->
+							<svg viewBox="0 0 16 16" class="bi bi-plus button-Icon buttonIcon" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+								<path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+							</svg>
+						</button>
+					</li>
+
+					<li class="nav-item" style="margin-left:10px;">
 						<button type="button" class="btn btn-outline-info" id="columns-fixwidth">Fix width</button>
 					</li>
 
@@ -544,6 +567,15 @@ SOFTWARE.
 						<button type="button" class="btn btn-outline-info" id="interaction-pan">Pan</button>
 					</li>
 
+					<li class="nav-item" style="margin-left:10px;">
+						<label for="nextlabel">Next label:&nbsp;</label>
+					</li>
+					<li class="nav-item">
+						<input type="text" class="form-control" id="nextlabel" style="width:10em;" />
+					</li>
+					<li class="nav-item">
+						<button type="button" class="btn btn-outline-info" id="nextlabel-clear">No label</button>
+					</li>
 				</ul>
 			</nav>
 
