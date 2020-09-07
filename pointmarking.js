@@ -30,7 +30,6 @@ function openPointEdit(presence, closeOnOtherOpen = false) {
 }
 
 class PointMarkingEditPanel extends Panel {
-
     constructor(presence) {
         super($("#pointEditPanel")[0], presence.view);
 
@@ -45,6 +44,31 @@ class PointMarkingEditPanel extends Panel {
 
         bindElements(this.el, [this, this.presence, this.presence.controller]);
 
+        if (this.presence.bindings["isInPositionView"] == null)
+            this.presence.bindings["isInPositionView"] = [];
+
+        const panel = this;
+        const inPositionIndicatorUpdate = function() {
+            let val = panel.presence["isInPositionView"];
+            if (val) {
+                $("[data-binding=transformedXFormatted]", panel.el).css("color", "#8B0000");
+                $("[data-binding=transformedCtFormatted]", panel.el).css("color", "#8B0000");
+                $("[data-binding=transformedXFormatted]", panel.el).css("font-style", "normal");
+                $("[data-binding=transformedCtFormatted]", panel.el).css("font-style", "normal");
+            } else {
+                $("[data-binding=transformedXFormatted]", panel.el).css("color", "gray");
+                $("[data-binding=transformedCtFormatted]", panel.el).css("color", "gray");
+                $("[data-binding=transformedXFormatted]", panel.el).css("font-style", "oblique");
+                $("[data-binding=transformedCtFormatted]", panel.el).css("font-style", "oblique");
+            }
+        }
+
+        this.presence.bindings["isInPositionView"].push({
+            update: inPositionIndicatorUpdate
+        });
+
+        inPositionIndicatorUpdate();
+
         let canceled = !this.view.el.dispatchEvent(new CustomEvent("panelopen",
             {
                 bubbles: true,
@@ -58,7 +82,11 @@ class PointMarkingEditPanel extends Panel {
             return false;
         }
 
-        const panel = this;
+        this.onOtherPanelOpen = function () {
+            if (!panel.isPinned)
+                panel.close();
+        }
+
         this.el.addEventListener("closed", function (e) {
             // if (panel.pickr != null) {
             //     panel.pickr.destroyAndRemove();
@@ -86,11 +114,6 @@ class PointMarkingEditPanel extends Panel {
     close() {
         super.close();
     }
-
-    onOtherPanelOpen() {
-        if (!this.isPinned)
-            this.close();
-    }
 }
 
 class PointMarkingPresence {
@@ -101,7 +124,7 @@ class PointMarkingPresence {
         this.view = view;
         this.el = el;
         this.controller = controller;
-        this.bindings = [];
+        this.bindings = {};
         this.isPinned = false;
 
         this.view.markings.push(this);
@@ -167,12 +190,25 @@ class PointMarkingPresence {
         removeFromArr(this.controller.presences, this);
     }
 
+    rebaseTo() {
+        this.controller.rebase(this.view, { x: this.transformedX, ct: this.transformedCt });
+    }
+
     _setPos(x, ct) {
-        this.x = x;
-        this.ct = ct;
+        this.transformedX = x;
+        this.transformedCt = ct;
+
+        this.transformedXFormatted = `${this.transformedX.toFixed(2)} cs`;
+        this.transformedCtFormatted = `${this.transformedCt.toFixed(2)} s`;
+        updateBinding(this, "transformedXFormatted");
+        updateBinding(this, "transformedCtFormatted");
+
+        this.isInPositionView = this.controller.positionView === this.view;
+        updateBinding(this, "isInPositionView");
+
         //obj.x = x;
         //obj.ct = ct;
-        this.el.setAttribute("transform", `translate(${x * this.view.zoom} ${-ct * this.view.zoom})`);
+        this.el.setAttribute("transform", `translate(${this.transformedX * this.view.zoom} ${-this.transformedCt * this.view.zoom})`);
     };
 
     _setColor(c) {
@@ -181,6 +217,18 @@ class PointMarkingPresence {
 
     _updateColor() {
         this._setColor(this.controller.color.value);
+    }
+
+    setTransformedXFormatted(val) {
+        if (this.controller.positionView !== this.view)
+            this.rebaseTo();
+        this.controller.setX(parseFloat(val));
+    }
+
+    setTransformedCtFormatted(val) {
+        if (this.controller.positionView !== this.view)
+            this.rebaseTo();
+        this.controller.setCt(parseFloat(val));
     }
 
     //obj.presences[view].setPos(obj.x, obj.ct);
@@ -223,6 +271,10 @@ class PointMarking {
         this.positionView = positionView;
         this.currentEditPanel = null;
 
+        const controller = this;
+        this.onPositionViewSpeedChanged = function () {
+            controller._recalcPositions();
+        }
         positionView.speedDependencies.push(this.onPositionViewSpeedChanged);
 
         autoMarkings.push(this);
@@ -236,9 +288,14 @@ class PointMarking {
         new PointMarking(obj, positionView);
     }
 
-    onPositionViewSpeedChanged() {
-        this._recalcPositions();
-    };
+    rebase(view, position) {
+        if (this.positionView != null)
+            removeFromArr(this.positionView.speedDependencies, this.onPositionViewSpeedChanged);
+
+        this.positionView = view;
+        this.positionView.speedDependencies.push(this.onPositionViewSpeedChanged);
+        this.setPosition(position.x, position.ct);
+    }
 
     setLabel(label) {
         if (label == "sinterklaas")
@@ -249,16 +306,20 @@ class PointMarking {
     };
 
     setX(x) {
-        this.x = parseFloat(x);
-        updateBinding(this, "x");
-        this._recalcPositions();
+        this.setPosition(parseFloat(x), this.ct);
     };
 
     setCt(ct) {
-        this.ct = parseFloat(ct);
+        this.setPosition(this.x, parseFloat(ct));
+    };
+
+    setPosition(x, ct) {
+        this.x = x;
+        this.ct = ct;
+        updateBinding(this, "x");
         updateBinding(this, "ct");
         this._recalcPositions();
-    };
+    }
 
     _recalcPositions() {
         for (let pres of this.presences) {
