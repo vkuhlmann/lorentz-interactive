@@ -508,6 +508,10 @@ $(document).ready(function () {
 
     createLayout();
 
+    $(document).ready(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+
     // $("#speedSlider")[0].value = 0;
 
     // $("#speedSlider").on('input', function () {

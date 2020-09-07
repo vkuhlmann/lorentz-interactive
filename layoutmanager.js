@@ -233,8 +233,10 @@ function createDiagramCard() {
     //diagramView.svgIndications.addMouseEventListener("click", diagramView.onClick);
     //diagramView.svgIndications.addMouseEventListener("pointerover", diagramView.onPointerOver);
 
-    let card = { diagramView: diagramView, el: createTemplateInstance("card", $("#cardsholder")[0]),
-        title: "Perspective", bindings: [] };
+    let card = {
+        diagramView: diagramView, el: createTemplateInstance("card", $("#cardsholder")[0]),
+        title: "Perspective", bindings: []
+    };
     card.viewSpeedControl = { el: $("[data-id=viewSpeedControl]", card.el)[0] };
     card.controlToggle = { el: $("[data-id=controlToggle]", card.el)[0] };
     card.controlToggle.el.addEventListener("click", function (ev) {
@@ -245,7 +247,7 @@ function createDiagramCard() {
         }
     });
 
-    card.setTitle = function(value) {
+    card.setTitle = function (value) {
         card.title = value;
         updateBinding(card, "title");
     }
@@ -302,7 +304,7 @@ function createDiagramCard() {
 
     card.setZoom = function (value = 1.0, origin = null) {
         if (origin == null)
-            origin = {x: 0, y: 0};
+            origin = { x: 0, y: 0 };
         let newZoom = Math.max(value, 1e-1);
 
         let xMargin = origin.x * card.diagramView.zoom - card.diagramView.panOffset.x;
@@ -444,6 +446,31 @@ function createDiagramCard() {
     activateTemplateInstance(card.el);
     for (let m of autoMarkings) {
         m.addToView(diagramView);
+    }
+
+    card.producePng = function (pictureElements) {
+        if (pictureElements == null || pictureElements.length == 0)
+            return;
+        /* Source: https://stackoverflow.com/questions/12255444/copy-svg-images-from-browser-to-clipboard */
+        svgAsPngUri(card.diagramView.svgElem.el, {
+            scale: Math.ceil(1000.0 / card.diagramView.svgElem.el.getBBox().width),
+            backgroundColor: "rgba(100%, 100%, 100%, 1)", renderingOptions: 0.92
+        }).then(uri => {
+            for (let el of pictureElements) {
+                el.setAttribute("src", uri);
+            }
+            //pictureEl.style.display = "block";
+        });
+    }
+    card.pngHolder = { elements: $("img[data-binding=\"diagram-pngImg\"]", card.el).toArray() };
+    card.updatePng = function () {
+        card.producePng(card.pngHolder.elements);
+    }
+    card.updatePng();
+
+    for (let pngEl of card.pngHolder.elements) {
+        pngEl.addEventListener("contextmenu", card.updatePng);
+        pngEl.addEventListener("click", card.updatePng);
     }
 }
 
