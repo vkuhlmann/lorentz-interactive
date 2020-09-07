@@ -418,13 +418,13 @@ function AddMarking(obj, positionView) {
         positionView.speedDependencies.push(obj.onPositionViewSpeedChanged);
 
         obj.setX = function (x) {
-            obj.x = x;
+            obj.x = parseFloat(x);
             updateBinding(obj, "x");
             this._recalcPositions();
         };
 
         obj.setCt = function (ct) {
-            obj.ct = ct;
+            obj.ct = parseFloat(ct);
             updateBinding(obj, "ct");
             this._recalcPositions();
         };

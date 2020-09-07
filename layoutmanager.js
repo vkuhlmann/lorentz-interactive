@@ -233,7 +233,8 @@ function createDiagramCard() {
     //diagramView.svgIndications.addMouseEventListener("click", diagramView.onClick);
     //diagramView.svgIndications.addMouseEventListener("pointerover", diagramView.onPointerOver);
 
-    let card = { diagramView: diagramView, el: createTemplateInstance("card", $("#cardsholder")[0]) };
+    let card = { diagramView: diagramView, el: createTemplateInstance("card", $("#cardsholder")[0]),
+        title: "Perspective", bindings: [] };
     card.viewSpeedControl = { el: $("[data-id=viewSpeedControl]", card.el)[0] };
     card.controlToggle = { el: $("[data-id=controlToggle]", card.el)[0] };
     card.controlToggle.el.addEventListener("click", function (ev) {
@@ -243,6 +244,12 @@ function createDiagramCard() {
             card.viewSpeedControl.el.classList.add("collapse");
         }
     });
+
+    card.setTitle = function(value) {
+        card.title = value;
+        updateBinding(card, "title");
+    }
+
     card.deleteCard = function () {
         if (views.length > 1 && card.diagramView._speedRelRef === null) {
             let a;
@@ -293,17 +300,26 @@ function createDiagramCard() {
         card.viewSpeedControl = null;
     };
 
-    card.zoomSet = function (value = 1.0) {
-        card.diagramView.zoom = Math.max(value, 1e-5);
+    card.setZoom = function (value = 1.0, origin = null) {
+        if (origin == null)
+            origin = {x: 0, y: 0};
+        let newZoom = Math.max(value, 1e-1);
+
+        let xMargin = origin.x * card.diagramView.zoom - card.diagramView.panOffset.x;
+        let yMargin = origin.y * card.diagramView.zoom - card.diagramView.panOffset.y;
+        card.diagramView.panOffset.x = origin.x * newZoom - xMargin;
+        card.diagramView.panOffset.y = origin.y * newZoom - yMargin;
+
+        card.diagramView.zoom = newZoom;
         card.updatePositioning();
     }
 
-    card.zoomIncrease = function (frac = 0.1) {
-        this.zoomSet(card.diagramView.zoom + frac);
+    card.zoomIncrease = function (frac = 0.1, origin = null) {
+        this.setZoom(card.diagramView.zoom + frac, origin);
     }
 
-    card.zoomDecrease = function (frac = 0.1) {
-        this.zoomSet(card.diagramView.zoom - frac);
+    card.zoomDecrease = function (frac = 0.1, origin = null) {
+        this.setZoom(card.diagramView.zoom - frac, origin);
     }
 
     card.setPanOffset = function (x, y) {
@@ -313,8 +329,8 @@ function createDiagramCard() {
 
     card.updatePositioning = function () {
         card.diagramView.pannableContent.setTranslation(
-            -card.diagramView.panOffset.x * card.diagramView.zoom,
-            -card.diagramView.panOffset.y * card.diagramView.zoom);
+            -card.diagramView.panOffset.x,// * card.diagramView.zoom,
+            -card.diagramView.panOffset.y);// * card.diagramView.zoom);
         for (let m of card.diagramView.markings) {
             m.updatePosition();
         }
@@ -322,7 +338,7 @@ function createDiagramCard() {
 
     bindElements(card.el, card);
     card.viewSpeedControl.sliders = [];
-    card.zoomSet(1.0);
+    card.setZoom(1.0);
 
     card.addCardLink = function (other) {
         let slider = {
@@ -572,19 +588,20 @@ function createLayout() {
                     if (transfMatrix !== null) {
                         let point = DOMPoint.fromPoint(pos);
                         point = point.matrixTransform(transfMatrix)
+                            .matrixTransform(new DOMMatrix().scaleSelf(card.diagramView.zoom, card.diagramView.zoom))
                             .matrixTransform(new DOMMatrix().translateSelf(card.diagramView.panOffset.x, card.diagramView.panOffset.y));
 
                         card.setPanOffset(point.x, point.y);
                     }
                 },
-                wheel: function(event, pos, card) {
+                wheel: function (event, pos, card) {
                     let scrollAmount = event.deltaY;
                     if (event.deltaMode == 1) {
                         scrollAmount = -0.1 * scrollAmount / 10;
                     } else {
                         scrollAmount = scrollAmount / 1000;
                     }
-                    card.zoomIncrease(scrollAmount);
+                    card.zoomIncrease(scrollAmount, pos);
                 },
                 dismiss: function () {
                     isPanModus = false;
