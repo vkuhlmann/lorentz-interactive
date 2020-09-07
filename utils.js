@@ -225,7 +225,7 @@ function bindColor(el, context, targetName, listeners, applyListeners = true) {
 function tryBinding(el, viewModel, listenToInput = true) {
     let name = el.getAttribute("data-binding");
     let type = el.getAttribute("binding-type") || "content";
-    if (name === null)
+    if (name == null)
         return false;
 
     if (el.tagName == "INPUT") {
@@ -247,7 +247,7 @@ function tryBinding(el, viewModel, listenToInput = true) {
     if (target == null) {
         let parts = name.split(" ");
         target = viewModel;
-        for (p of parts) {
+        for (let p of parts) {
             context = target;
             target = target[p];
             targetName = p;
@@ -281,32 +281,54 @@ function tryBinding(el, viewModel, listenToInput = true) {
     }
 }
 
-function bindValueToElements(el, name, handlersStructs) {
-    if (handlersStructs == null)
-        handlersStructs = []
-    else if (!(handlersStructs instanceof Array))
-        handlersStructs = [handlersStructs];
+// function bindValueToElements(el, name, handlersStructs) {
+//     if (handlersStructs == null)
+//         handlersStructs = []
+//     else if (!(handlersStructs instanceof Array))
+//         handlersStructs = [handlersStructs];
 
-    for (let binding of $(`[data-binding=${name}]`, el)) {
-        for (let handlersStruct of handlersStructs) {
-            if (tryBinding(binding, handlersStruct))
-                break;
-        }
-    }
-}
+//     for (let binding of $(`[data-binding=${name}]`, el)) {
+//         for (let handlersStruct of handlersStructs) {
+//             if (tryBinding(binding, handlersStruct))
+//                 break;
+//         }
+//     }
+// }
 
 function bindElements(el, vals, filter = null) {
     if (!(vals instanceof Array))
         vals = [vals];
+    let foundBinding;
+    for (let bindingEl of $("[data-binding]", el)) {
+        let name = bindingEl.getAttribute("data-binding");
+        if (name.endsWith("#"))
+            continue;
 
-    for (let struct of vals) {
-        for (let name in struct) {
-            if (filter != null && !filter.includes(name))
-                continue;
-            bindValueToElements(el, name, struct);
+        foundBinding = false;
+        for (let context of vals) {
+            if (tryBinding(bindingEl, context)) {
+                foundBinding = true;
+                break;
+            }
+        }
+        if (!foundBinding) {
+            //console.log(`WARN: Binding ${name} not found`);
         }
     }
 }
+
+// function bindElements(el, vals, filter = null) {
+//     if (!(vals instanceof Array))
+//         vals = [vals];
+
+//     for (let struct of vals) {
+//         for (let name in Object.getpropes(struct.getOwnPropertyNames()) {
+//             if (filter != null && !filter.includes(name))
+//                 continue;
+//             bindValueToElements(el, name, struct);
+//         }
+//     }
+// }
 
 // Source: https://stackoverflow.com/questions/2998784/how-to-output-numbers-with-leading-zeros-in-javascript
 function pad(num, size) {

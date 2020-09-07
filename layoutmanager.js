@@ -462,7 +462,7 @@ function createDiagramCard() {
             //pictureEl.style.display = "block";
         });
     }
-    card.pngHolder = { elements: $("img[data-binding=\"diagram-pngImg\"]", card.el).toArray() };
+    card.pngHolder = { elements: $("img[data-binding=\"diagram-pngImg#\"]", card.el).toArray() };
     card.updatePng = function () {
         card.producePng(card.pngHolder.elements);
     }
@@ -520,8 +520,8 @@ function createLayout() {
     createDiagramCard();
     createDiagramCard();
 
-    AddMarking({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
-    AddMarking({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
+    PointMarking.create({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
+    PointMarking.create({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
 
     $("#addcardbutton").click(function (ev) {
         createDiagramCard();
@@ -570,7 +570,7 @@ function createLayout() {
             isPointAddModus = true;
             setDiagramHandle({
                 click: function (event, pos, card) {
-                    AddMarking({ type: "point", x: pos.x, ct: -pos.y, label: "Yeey!" }, card.diagramView);
+                    PointMarking.create({ type: "point", x: pos.x, ct: -pos.y, label: "Yeey!" }, card.diagramView);
                     setDiagramHandle({});
                 },
                 dismiss: function () {
