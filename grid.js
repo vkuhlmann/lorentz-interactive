@@ -31,7 +31,7 @@ class Grid {
         let grids = $("[data-id=grids]", view.el)[0];
         this.el = document.createElementNS("http://www.w3.org/2000/svg", "g");
         grids.appendChild(this.el);
-        
+
         this.recreate();
     }
 
@@ -64,12 +64,12 @@ class Grid {
         let logicalStartY = Math.floor(logicalStartPoint.y);
 
         let start = new DOMPoint(logicalStartX, logicalStartY).matrixTransform(transf);
-        
+
         let i = 0;
         while (true) {
             let basePoint = new DOMPoint(start.x + dirX.x * i, start.y + dirX.y * i);
             let magnitudes = [[dirY.x, boundRect.x - basePoint.x, boundRect.x + boundRect.width - basePoint.x],
-                [dirY.y, boundRect.y - basePoint.y, boundRect.y + boundRect.height - basePoint.y]];
+            [dirY.y, boundRect.y - basePoint.y, boundRect.y + boundRect.height - basePoint.y]];
             let currentMin = -Infinity;
             let currentMax = Infinity;
 
@@ -107,7 +107,7 @@ class Grid {
             p.style.strokeWidth = 0.1;
             p.style.strokeDasharray = "2 3";
             //p.style.stroke = "red";
-            this.lines.push({el:p, basePoint: basePoint, dirX: dirX, dirY: dirY });
+            this.lines.push({ el: p, basePoint: basePoint, dirX: dirX, dirY: dirY });
             this.el.appendChild(p);
             i += 1;
         }

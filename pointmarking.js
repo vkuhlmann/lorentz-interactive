@@ -48,7 +48,7 @@ class PointMarkingEditPanel extends Panel {
             this.presence.bindings["isInPositionView"] = [];
 
         const panel = this;
-        const inPositionIndicatorUpdate = function() {
+        const inPositionIndicatorUpdate = function () {
             let val = panel.presence["isInPositionView"];
             if (val) {
                 $("[data-binding=transformedXFormatted]", panel.el).css("color", "#8B0000");

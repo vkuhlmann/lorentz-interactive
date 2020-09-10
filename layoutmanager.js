@@ -86,7 +86,7 @@ function createDiagramCard() {
         return DOMPoint.fromPoint(p).matrixTransform(domMat);
     };
 
-    diagramView.coordinatePlaced.getCurrentViewBounds = function() {
+    diagramView.coordinatePlaced.getCurrentViewBounds = function () {
         let rect = diagramView.svgElem.el.getBoundingClientRect();//.getBBox();
         let a = new DOMPoint(rect.x, rect.y);
         let b = new DOMPoint(rect.x + rect.width, rect.y + rect.height);
