@@ -159,6 +159,9 @@ function createDiagramCard() {
         for (let presence of this.markings) {
             presence.onViewBetaSet(this.globalBeta);
         }
+        for (let grid of this.grids) {
+            grid.onViewBetaSet(this.globalBeta);
+        }
 
         for (let dep of this.speedDependencies) {
             if (dep instanceof Function) {

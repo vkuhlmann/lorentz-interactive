@@ -33,9 +33,14 @@ class Grid {
         grids.appendChild(this.el);
 
         this.recreate();
+
+        const grid = this;
+        views[0].speedDependencies.push(function () {
+            this.recreate();
+        });
     }
 
-    onViewBetaSet() {
+    onViewBetaSet(beta) {
         this.recreate();
     }
 
@@ -43,7 +48,8 @@ class Grid {
         this.lines = [];
         while (this.el.hasChildNodes())
             this.el.removeChild(this.el.childNodes[0]);
-        this.fillBetween();
+
+        this.fillBetween()
 
         let origMatrix = this.matrix;
         let rotatedMatrix = origMatrix.rotate(0, 0, -90);
@@ -58,22 +64,33 @@ class Grid {
         let boundRect = this.view.coordinatePlaced.getCurrentViewBounds();
 
         let transf = this.matrix;
-        let dirX = lorentzTransform(this.view.globalBeta, new DOMPoint(1.0, 0.0).matrixTransform(transf), views[0].globalBeta);
-        let dirY = lorentzTransform(this.view.globalBeta, new DOMPoint(0.0, 1.0).matrixTransform(transf), views[0].globalBeta);
+        let thisView = this.view;
+        let otherView = views[0];
 
-        const grid = this;
-        views[0].speedDependencies.push(function () {
-            grid.onViewBetaSet();
-        });
+        let dirX = lorentzTransform(otherView.globalBeta, new DOMPoint(1.0, 0.0).matrixTransform(transf), thisView.globalBeta);
+        let dirY = lorentzTransform(otherView.globalBeta, new DOMPoint(0.0, 1.0).matrixTransform(transf), thisView.globalBeta);
 
-        let logicalStartPoint = new DOMPoint(boundRect.x, boundRect.y).matrixTransform(transf.inverse());
+        // if (dirX.x * dirX.x + dirX.y * dirX.y < 0.01 * 0.01)
+        //     return;
+        // if (dirY.x * dirY.x + dirY.y * dirY.y < 0.01 * 0.01)
+        //     return;
+
+        if (dirX.x < 0)
+            dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
+        let logicalStartPoint = new DOMPoint(boundRect.x, dirX.y >= 0 ? boundRect.y : boundRect.y + boundRect.height);
+        logicalStartPoint = lorentzTransform(thisView.globalBeta, logicalStartPoint, otherView.globalBeta);
+        logicalStartPoint = logicalStartPoint.matrixTransform(transf.inverse());
         let logicalStartX = Math.floor(logicalStartPoint.x);
         let logicalStartY = Math.floor(logicalStartPoint.y);
 
         let start = new DOMPoint(logicalStartX, logicalStartY).matrixTransform(transf);
+        start = lorentzTransform(otherView.globalBeta, start, thisView.globalBeta);
 
         let i = 0;
         while (true) {
+            if (i > 1000)
+                break;
+
             let basePoint = new DOMPoint(start.x + dirX.x * i, start.y + dirX.y * i);
             let magnitudes = [[dirY.x, boundRect.x - basePoint.x, boundRect.x + boundRect.width - basePoint.x],
             [dirY.y, boundRect.y - basePoint.y, boundRect.y + boundRect.height - basePoint.y]];
@@ -113,6 +130,8 @@ class Grid {
                 + `${basePoint.x + currentMax * dirY.x} ${basePoint.y + currentMax * dirY.y}`);
             p.style.strokeWidth = 0.1;
             p.style.strokeDasharray = "2 3";
+            if (i == 999)
+                p.style.stroke = "red";
             //p.style.stroke = "red";
             this.lines.push({ el: p, basePoint: basePoint, dirX: dirX, dirY: dirY });
             this.el.appendChild(p);
