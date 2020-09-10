@@ -64,7 +64,7 @@ let cards = [];
 function createDiagramCard() {
     let diagramView = {
         el: createTemplateInstance("diagram-view", null, true), markings: [],
-        zoom: 1.0, panOffset: { x: 0, y: 0 }
+        zoom: 1.0, panOffset: { x: 0, y: 0 }, grids: []
     };
     diagramView.highlight = { el: $("[data-id=diagram-highlight]", diagramView.el)[0] };
 
@@ -87,12 +87,12 @@ function createDiagramCard() {
     };
 
     diagramView.coordinatePlaced.getCurrentViewBounds = function() {
-        let rect = diagramView.svgElem.el.getBBox();
+        let rect = diagramView.svgElem.el.getBoundingClientRect();//.getBBox();
         let a = new DOMPoint(rect.x, rect.y);
         let b = new DOMPoint(rect.x + rect.width, rect.y + rect.height);
         let transf = new DOMMatrix();//diagramView.svgElem.el.getCTM().invertSelf();
         transf = transf.preMultiplySelf(new DOMMatrix().scaleSelf(diagramView.zoom, diagramView.zoom));
-        transf = transf.preMultiplySelf(diagramView.svgIndications.el.getCTM()).invertSelf();
+        transf = transf.preMultiplySelf(diagramView.svgIndications.el.getScreenCTM()).invertSelf();
         a = a.matrixTransform(transf);
         b = b.matrixTransform(transf);
 
@@ -350,6 +350,9 @@ function createDiagramCard() {
         for (let m of card.diagramView.markings) {
             m.updatePosition();
         }
+        for (let g of card.diagramView.grids) {
+            g.recreate();
+        }
     }
 
     bindElements(card.el, card);
@@ -565,12 +568,12 @@ function createLayout() {
     PointMarking.create({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
     PointMarking.create({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
 
-    new Grid(views[0]);
+    new Grid(views[1]);
 
-    setInterval(() => {
-        let rect = views[0].coordinatePlaced.getCurrentViewBounds();
-        console.log(`${rect.x.toFixed(2)}, ${rect.y.toFixed(2)}, width: ${rect.width.toFixed(2)}, height: ${rect.height.toFixed(2)}`);
-    }, 1500);
+    // setInterval(() => {
+    //     let rect = views[0].coordinatePlaced.getCurrentViewBounds();
+    //     console.log(`${rect.x.toFixed(2)}, ${rect.y.toFixed(2)}, width: ${rect.width.toFixed(2)}, height: ${rect.height.toFixed(2)}`);
+    // }, 1500);
 
     $("#addcardbutton").click(function (ev) {
         createDiagramCard();

@@ -264,8 +264,8 @@ function lorentzTransform(targetGlobalBeta, point, sourceGlobalBeta) {
         (sourceGlobalBeta - targetGlobalBeta) / (1 - sourceGlobalBeta * targetGlobalBeta);
 
     let gamma = Math.sqrt(1 / (1 - (beta * beta)))
-    let xTransf = gamma * (this.controller.x + beta * this.controller.ct);
-    let ctTransf = gamma * (this.controller.ct + beta * this.controller.x);
+    let xTransf = gamma * (x + beta * ct);
+    let ctTransf = gamma * (ct + beta * x);
 
     let a = new DOMPoint(xTransf, ctTransf);
     a.ct = -ctTransf;
