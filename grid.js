@@ -44,6 +44,13 @@ class Grid {
         while (this.el.hasChildNodes())
             this.el.removeChild(this.el.childNodes[0]);
         this.fillBetween();
+
+        let origMatrix = this.matrix;
+        let rotatedMatrix = origMatrix.rotate(0, 0, -90);
+        this.matrix = rotatedMatrix;
+        this.fillBetween();
+
+        this.matrix = origMatrix;
     }
 
     fillBetween() {
@@ -95,7 +102,7 @@ class Grid {
 
             if (currentMax <= currentMin) {
                 i += 1;
-                if (i == 1)
+                if (i <= 2)
                     continue;
                 else
                     break;
