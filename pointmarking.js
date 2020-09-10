@@ -131,7 +131,7 @@ class PointMarkingPresence {
         this.controller.presences.push(this);
 
         //$("[data-binding=label]", el)[0].innerHTML = obj.label;
-        this.el.id = `view${view.id}_marking${markingID}`;
+        //this.el.id = `view${view.id}_marking${markingID}`;
         markingID += 1;
 
         this.onViewBetaSet(view.globalBeta);
@@ -254,6 +254,22 @@ class PointMarkingPresence {
 
         this._setPos(xTransf, ctTransf);
     };
+}
+
+function lorentzTransform(targetGlobalBeta, point, sourceGlobalBeta) {
+    let x = point.x;
+    let ct = point.ct || -point.y;
+
+    let beta =
+        (sourceGlobalBeta - targetGlobalBeta) / (1 - sourceGlobalBeta * targetGlobalBeta);
+
+    let gamma = Math.sqrt(1 / (1 - (beta * beta)))
+    let xTransf = gamma * (this.controller.x + beta * this.controller.ct);
+    let ctTransf = gamma * (this.controller.ct + beta * this.controller.x);
+
+    let a = new DOMPoint(xTransf, ctTransf);
+    a.ct = -ctTransf;
+    return a;
 }
 
 class PointMarking {

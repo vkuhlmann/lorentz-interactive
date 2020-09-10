@@ -80,16 +80,30 @@ function createDiagramCard() {
         return DOMPoint.fromPoint(p).matrixTransform(new DOMMatrix().scaleSelf(diagramView.zoom, diagramView.zoom).preMultiplySelf(diagramView.svgIndications.el.getScreenCTM()));
     };
 
-    diagramView.coordinatePlaced.toSVGSppace = function (p) {
+    diagramView.coordinatePlaced.toSVGSpace = function (p) {
         let domMat = new DOMMatrix().scaleSelf(diagramView.zoom, diagramView.zoom).preMultiplySelf(diagramView.svgIndications.el.getScreenCTM())
         domMat.invertSelf();
         return DOMPoint.fromPoint(p).matrixTransform(domMat);
-    }
+    };
+
+    diagramView.coordinatePlaced.getCurrentViewBounds = function() {
+        let rect = diagramView.svgElem.el.getBBox();
+        let a = new DOMPoint(rect.x, rect.y);
+        let b = new DOMPoint(rect.x + rect.width, rect.y + rect.height);
+        let transf = new DOMMatrix();//diagramView.svgElem.el.getCTM().invertSelf();
+        transf = transf.preMultiplySelf(new DOMMatrix().scaleSelf(diagramView.zoom, diagramView.zoom));
+        transf = transf.preMultiplySelf(diagramView.svgIndications.el.getCTM()).invertSelf();
+        a = a.matrixTransform(transf);
+        b = b.matrixTransform(transf);
+
+        return new DOMRect(Math.min(a.x, b.x), Math.min(a.y, b.y),
+            Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+    };
 
     diagramView.pannableContent = { el: $("[data-id=\"pannableContent\"]", diagramView.svgElem.el)[0] };
     diagramView.pannableContent.setTranslation = function (x, y) {
         diagramView.pannableContent.el.setAttribute("transform", `translate(${x} ${y})`);
-    }
+    };
 
     diagramView.canBaseOn = function (relView) {
         if (this._speedRelRef === null && relView !== this)
@@ -103,7 +117,7 @@ function createDiagramCard() {
 
     diagramView.svgIndications.addMouseEventListener = function (name, func) {
         diagramView.svgElem.el.addEventListener(name, function (ev) {
-            return func(ev, diagramView.coordinatePlaced.toSVGSppace({ x: ev.clientX, y: ev.clientY }));
+            return func(ev, diagramView.coordinatePlaced.toSVGSpace({ x: ev.clientX, y: ev.clientY }));
         }, true);
     };
 
@@ -205,7 +219,7 @@ function createDiagramCard() {
         diagramView["handleGlobal" + eventName] = f;
 
         diagramView.svgIndications.addMouseEventListener(eventName, f);
-    }
+    };
 
     if (views.length > 0)
         diagramView.setSpeed(views[0], 0);
@@ -550,6 +564,13 @@ function createLayout() {
 
     PointMarking.create({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
     PointMarking.create({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
+
+    new Grid(views[0]);
+
+    setInterval(() => {
+        let rect = views[0].coordinatePlaced.getCurrentViewBounds();
+        console.log(`${rect.x.toFixed(2)}, ${rect.y.toFixed(2)}, width: ${rect.width.toFixed(2)}, height: ${rect.height.toFixed(2)}`);
+    }, 1500);
 
     $("#addcardbutton").click(function (ev) {
         createDiagramCard();
