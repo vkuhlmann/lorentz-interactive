@@ -73,7 +73,7 @@ function createDiagramCard(obj = {}) {
     diagramView._speedRelRef = undefined;
     diagramView._speedRel = 0;
     diagramView.speedDependencies = [];
-    diagramView.colorHSL = obj.colorHSL || [0, 0.0, 0.2];
+    diagramView.colorHSL = diagramView.colorHSL || getNextColor() || [0, 0.0, 0.2];
     diagramView.color = `hsl(${diagramView.colorHSL[0]} ${(diagramView.colorHSL[1] * 100).toFixed(1)}% ${(diagramView.colorHSL[2] * 100).toFixed(1)}%)`;
 
     diagramView.svgElem = { el: $("svg[data-id=\"diagram\"]", diagramView.el)[0] };
@@ -591,20 +591,20 @@ function lorentzTransform(targetGlobalBeta, point, sourceGlobalBeta) {
     return a;
 }
 
-const CARD_COLORS = [[120, 0.6, 0.5], [240, 0.6, 0.7], [0, 0.6, 0.4]];
+const CARD_COLORS = [[120, 0.6, 0.5], [240, 0.6, 0.7], [0, 0.6, 0.6]];
 let nextColorIndex;
 
 function getNextColor() {
     let c = CARD_COLORS[nextColorIndex];
-    nextColorIndex += 1;
+    nextColorIndex = (nextColorIndex + 1) % CARD_COLORS.length;
     return c;
 }
 
 function createLayout() {
     nextColorIndex = 0;
 
-    createDiagramCard({colorHSL: getNextColor()});
-    createDiagramCard({colorHSL: getNextColor()});
+    createDiagramCard();
+    createDiagramCard();
 
     PointMarking.create({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
     PointMarking.create({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
