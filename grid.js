@@ -49,18 +49,75 @@ class Grid {
         while (this.el.hasChildNodes())
             this.el.removeChild(this.el.childNodes[0]);
 
-        this.fillBetween()
+        this.placeSeries()
 
         let origMatrix = this.matrix;
         let rotatedMatrix = origMatrix.rotate(0, 0, -90);
         this.matrix = rotatedMatrix;
-        this.fillBetween();
+        this.placeSeries();
 
         this.matrix = origMatrix;
     }
 
-    fillBetween() {
-        //let boundRectClient = this.view.coordinatePlaced.getBBox();
+    cropInfiniteToBounds(basePoint, dir, bounds) {
+        let magnitudes = [[dir.x, bounds.x - basePoint.x, bounds.x + bounds.width - basePoint.x],
+        [dir.y, bounds.y - basePoint.y, bounds.y + bounds.height - basePoint.y]];
+
+        let currentMin = -Infinity;
+        let currentMax = Infinity;
+
+        magnitudes.sort(function (a, b) {
+            return Math.abs(b[0]) - Math.abs(a[0]);
+        });
+
+        for (let m of magnitudes) {
+            if (m[0] >= 0) {
+                if (currentMax * m[0] > m[2])
+                    currentMax = m[2] / m[0];
+
+                if (currentMin * m[0] < m[1])
+                    currentMin = m[1] / m[0];
+            } else {
+                if (currentMax * m[0] < m[1])
+                    currentMax = m[1] / m[0];
+
+                if (currentMin * m[0] > m[2])
+                    currentMin = m[2] / m[0];
+            }
+        }
+
+        if (currentMax <= currentMin)
+            return null;
+        else
+            return [new DOMPoint(basePoint.x + dir.x * currentMin, basePoint.y + dir.y * currentMin),
+            new DOMPoint(basePoint.x + dir.x * currentMax, basePoint.y + dir.y * currentMax)];
+    }
+
+    addFiniteLine(posStart, posEnd, data = {}) {
+        let p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        p.setAttribute("d", `M ${posStart.x} ${posStart.y} ${posEnd.x} ${posEnd.y}`);
+        p.style.strokeWidth = 0.1;
+        p.style.strokeDasharray = "1 1.5";
+        // if (i == 999)
+        //     p.style.stroke = "red";
+
+        this.el.appendChild(p);
+        let obj = { el: p, ...data };
+        this.lines.push(obj);
+        return obj;
+    }
+
+    addInfiniteLine(basePoint, dir, bounds, data = {}) {
+        let pos = this.cropInfiniteToBounds(basePoint, dir, bounds);
+        if (pos === null)
+            return null;
+        let [posStart, posEnd] = pos;
+        data["infDir"] = dir;
+        data["infCropBounds"] = bounds;
+        return this.addFiniteLine(posStart, posEnd, data);
+    }
+
+    placeSeries() {
         let boundRect = this.view.coordinatePlaced.getCurrentViewBounds();
 
         let transf = this.matrix;
@@ -70,26 +127,11 @@ class Grid {
         let dirX = lorentzTransform(thisView.globalBeta, new DOMPoint(1.0, 0.0).matrixTransform(transf), otherView.globalBeta);
         let dirY = lorentzTransform(thisView.globalBeta, new DOMPoint(0.0, 1.0).matrixTransform(transf), otherView.globalBeta);
 
-        // if (dirX.x * dirX.x + dirX.y * dirX.y < 0.01 * 0.01)
-        //     return;
-        // if (dirY.x * dirY.x + dirY.y * dirY.y < 0.01 * 0.01)
-        //     return;
-
-        // if (dirX.x < 0)
-        //     dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
         let startOnTop = true;// dirX.x * dirX.y >= 0;
         let startOnLeft = startOnTop ^ (dirY.y * dirY.x >= 0);
-        // if (dirX.y < 0)
-        //     dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
-
-        // if ((dirX.x >= 0) != startOnLeft) {
-        //     dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
-        // }
-        // let startOnTop = dirX.y >= 0;
-        // let startOnLeft = dirX.x >= 0;
 
         let logicalStartPoint = new DOMPoint(
-            startOnLeft ? boundRect.x : boundRect.x + boundRect.width, 
+            startOnLeft ? boundRect.x : boundRect.x + boundRect.width,
             startOnTop ? boundRect.y : boundRect.y + boundRect.height);
         if (logicalStartPoint.x * dirX.x + logicalStartPoint.y * dirX.y > 0)
             dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
@@ -102,68 +144,15 @@ class Grid {
         let start = new DOMPoint(logicalStartX, logicalStartY).matrixTransform(transf);
         start = lorentzTransform(thisView.globalBeta, start, otherView.globalBeta);
 
-        let i = 0;
-        while (true) {
-            if (i > 1000)
-                break;
-
+        for (let i = 0; i < 1000; i++) {
             let basePoint = new DOMPoint(start.x + dirX.x * i, start.y + dirX.y * i);
-            let magnitudes = [[dirY.x, boundRect.x - basePoint.x, boundRect.x + boundRect.width - basePoint.x],
-            [dirY.y, boundRect.y - basePoint.y, boundRect.y + boundRect.height - basePoint.y]];
-            let currentMin = -Infinity;
-            let currentMax = Infinity;
-
-            magnitudes.sort(function (a, b) {
-                return Math.abs(b[0]) - Math.abs(a[0]);
-            });
-
-            for (let m of magnitudes) {
-                if (m[0] >= 0) {
-                    if (currentMax * m[0] > m[2])
-                        currentMax = m[2] / m[0];
-
-                    if (currentMin * m[0] < m[1])
-                        currentMin = m[1] / m[0];
-                } else {
-                    if (currentMax * m[0] < m[1])
-                        currentMax = m[1] / m[0];
-
-                    if (currentMin * m[0] > m[2])
-                        currentMin = m[2] / m[0];
-                }
-            }
-
-            if (currentMax <= currentMin) {
-                i += 1;
-                if (i <= 2)
+            let res = this.addInfiniteLine(basePoint, dirY, boundRect, {});
+            if (res === null) {
+                if (i < 1)
                     continue;
                 else
                     break;
             }
-
-            let p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            p.setAttribute("d", `M ${basePoint.x + currentMin * dirY.x} ${basePoint.y + currentMin * dirY.y} `
-                + `${basePoint.x + currentMax * dirY.x} ${basePoint.y + currentMax * dirY.y}`);
-            p.style.strokeWidth = 0.1;
-            p.style.strokeDasharray = "1 1.5";
-            if (i == 999)
-                p.style.stroke = "red";
-            //p.style.stroke = "red";
-            this.lines.push({ el: p, basePoint: basePoint, dirX: dirX, dirY: dirY });
-            this.el.appendChild(p);
-            i += 1;
         }
-
-        // for (let v = minVal; v < maxVal; v += (maxVal - minVal) / 10) {
-        //     let p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        //     let vec = {x: 4, y: 2};
-
-
-        //     p.setAttribute("d", `M ${v} 0 v 100`);
-        //     p.style.strokeWidth = 0.6;
-        //     //p.style.stroke = "red";
-        //     this.lines.push({el:p, x: v});
-        //     this.el.appendChild(p);
-        // }
     }
 }
