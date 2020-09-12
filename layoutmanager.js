@@ -61,20 +61,27 @@ function activateTemplateInstance(el) {
 
 let cards = [];
 
-function createDiagramCard() {
+function createDiagramCard(obj = {}) {
     let diagramView = {
         el: createTemplateInstance("diagram-view", null, true), markings: [],
         zoom: 1.0, panOffset: { x: 0, y: 0 }, grids: []
     };
+    Object.assign(diagramView, obj);
+
     diagramView.highlight = { el: $("[data-id=diagram-highlight]", diagramView.el)[0] };
 
     diagramView._speedRelRef = undefined;
     diagramView._speedRel = 0;
     diagramView.speedDependencies = [];
+    diagramView.colorHSL = obj.colorHSL || [0, 0.0, 0.2];
+    diagramView.color = `hsl(${diagramView.colorHSL[0]} ${(diagramView.colorHSL[1] * 100).toFixed(1)}% ${(diagramView.colorHSL[2] * 100).toFixed(1)}%)`;
 
     diagramView.svgElem = { el: $("svg[data-id=\"diagram\"]", diagramView.el)[0] };
     diagramView.svgIndications = { el: $("[data-binding=\"diagram-indications\"]", diagramView.svgElem.el)[0] };
     diagramView.coordinatePlaced = { el: $("[data-id=\"coordinatePlaced\"]", diagramView.svgElem.el)[0] };
+    diagramView.el.style.border = `2px solid ${diagramView.color}`;
+    diagramView.el.style.borderRadius = `0.5rem`;
+    diagramView.el.style.overflow = "hidden";
 
     diagramView.coordinatePlaced.toClientSpace = function (p) {
         return DOMPoint.fromPoint(p).matrixTransform(new DOMMatrix().scaleSelf(diagramView.zoom, diagramView.zoom).preMultiplySelf(diagramView.svgIndications.el.getScreenCTM()));
@@ -584,9 +591,20 @@ function lorentzTransform(targetGlobalBeta, point, sourceGlobalBeta) {
     return a;
 }
 
+const CARD_COLORS = [[120, 0.6, 0.5], [240, 0.6, 0.7], [0, 0.6, 0.4]];
+let nextColorIndex;
+
+function getNextColor() {
+    let c = CARD_COLORS[nextColorIndex];
+    nextColorIndex += 1;
+    return c;
+}
+
 function createLayout() {
-    createDiagramCard();
-    createDiagramCard();
+    nextColorIndex = 0;
+
+    createDiagramCard({colorHSL: getNextColor()});
+    createDiagramCard({colorHSL: getNextColor()});
 
     PointMarking.create({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
     PointMarking.create({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
