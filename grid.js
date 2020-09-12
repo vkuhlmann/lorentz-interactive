@@ -149,6 +149,8 @@ class GridPresence {
 
         let dirX = lorentzTransform(thisView.globalBeta, new DOMPoint(1.0, 0.0).matrixTransform(transf), otherView.globalBeta);
         let dirY = lorentzTransform(thisView.globalBeta, new DOMPoint(0.0, 1.0).matrixTransform(transf), otherView.globalBeta);
+        dirX = new DOMPoint(dirX.x, dirX.y, 0.0, 0.0);
+        dirY = new DOMPoint(dirY.x, dirY.y, 0.0, 0.0);
 
         let startOnTop = true;// dirX.x * dirX.y >= 0;
         let startOnLeft = startOnTop ^ (dirY.y * dirY.x >= 0);
@@ -156,7 +158,8 @@ class GridPresence {
         let logicalStartPoint = new DOMPoint(
             startOnLeft ? boundRect.x : boundRect.x + boundRect.width,
             startOnTop ? boundRect.y : boundRect.y + boundRect.height);
-        if (logicalStartPoint.x * dirX.x + logicalStartPoint.y * dirX.y > 0)
+        if ((logicalStartPoint.x - (boundRect.x + boundRect.width / 2)) * dirX.x +
+            (logicalStartPoint.y - (boundRect.y + boundRect.height / 2)) * dirX.y > 0)
             dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
 
         logicalStartPoint = lorentzTransform(otherView.globalBeta, logicalStartPoint, thisView.globalBeta);
@@ -169,7 +172,13 @@ class GridPresence {
 
         for (let i = 0; i < 1000; i++) {
             let basePoint = new DOMPoint(start.x + dirX.x * i, start.y + dirX.y * i);
-            let res = this.addInfiniteLine(basePoint, dirY, boundRect, this.grid.gridLineStyle, {});
+            let placingTransf = new DOMMatrix().scaleSelf(this.view.zoom, this.view.zoom);
+            let boundTopLeft = new DOMPoint(boundRect.x, boundRect.y).matrixTransform(placingTransf);
+            let boundWidthHeight = new DOMPoint(boundRect.width, boundRect.height, 0.0, 0.0).matrixTransform(placingTransf);
+
+            let res = this.addInfiniteLine(basePoint.matrixTransform(placingTransf), dirY.matrixTransform(placingTransf),
+                new DOMRect(boundTopLeft.x, boundTopLeft.y, boundWidthHeight.x, boundWidthHeight.y),
+                boundRect, this.grid.gridLineStyle, {});
             if (res === null) {
                 if (i < 1)
                     continue;
