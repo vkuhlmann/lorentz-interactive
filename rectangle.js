@@ -90,6 +90,7 @@ class RectangleEditPanel extends Panel {
         });
         this.presence.controller.currentEditPanel = this;
         this.show();
+        //this.reposition();
 
         // let autoCloseFunction = function () {
         //     panel.close();
@@ -145,7 +146,7 @@ class RectanglePresence {
         bindElements(this.el, [this, this.controller]);
         this.controller.bindings["label"] = this.controller.bindings["label"] || [];
         this.controller.bindings["label"].push({
-            update: function() {
+            update: function () {
                 presence.repositionLabel();
             }
         });
@@ -187,6 +188,7 @@ class RectanglePresence {
         if (this.controller.currentEditPanel == null) {
             new RectangleEditPanel(this);
         }
+
         setTopPanel(this.controller.currentEditPanel);
         return true;
     }

@@ -698,9 +698,14 @@ function createLayout() {
             isRectangleAddModus = true;
             setDiagramHandle({
                 click: function (event, pos, card) {
+                    let alignX = 5;
+                    let alignY = 5;
+                    let top = Math.floor(pos.y / alignY) * alignY;
+                    let left = Math.floor(pos.x / alignX) * alignX;
+
                     Rectangle.create({
-                        type: "point", minX: pos.x - 2, maxX: pos.x + 2,
-                        minCt: -pos.y - 10, maxCt: -pos.y + 10, label: takeNextLabel()
+                        type: "point", minX: left, maxX: left + 5.0,
+                        minCt: -top - 20, maxCt: -top, label: takeNextLabel()
                     }, card.diagramView);
                     setDiagramHandle({});
                 },

@@ -145,8 +145,11 @@ class Panel {
         let panelWidth = this.getWidth();
         let panelHeight = this.getHeight();
 
+        // if (panelContainBounds == null)
+        //     panelContainBounds = new DOMRect(document.documentElement.clientLeft, document.documentElement.clientTop,
+        //         document.documentElement.clientWidth, document.documentElement.clientHeight); //document.body.getBoundingClientRect();
         if (panelContainBounds == null)
-            panelContainBounds = document.body.getBoundingClientRect();
+            panelContainBounds = new DOMRect(window.scrollX, window.scrollY, window.innerWidth, window.innerHeight);
 
         let freeOnLeft = alignRect.left - panelContainBounds.left;
         let freeOnRight = panelContainBounds.right - alignRect.right;
