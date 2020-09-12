@@ -264,10 +264,8 @@ class PointMarking {
 
         this.presences = [];//{};
 
-        if (this.color == null)
-            this.color = {};
-        if (this.color.value == null)
-            this.color.value = "#000";
+        this.color = this.color || {};
+        this.color.value = this.color.value || positionView.color;
 
         this.positionView = positionView;
         this.currentEditPanel = null;
