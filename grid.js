@@ -145,7 +145,7 @@ class Grid {
             p.setAttribute("d", `M ${basePoint.x + currentMin * dirY.x} ${basePoint.y + currentMin * dirY.y} `
                 + `${basePoint.x + currentMax * dirY.x} ${basePoint.y + currentMax * dirY.y}`);
             p.style.strokeWidth = 0.1;
-            p.style.strokeDasharray = "2 3";
+            p.style.strokeDasharray = "1 1.5";
             if (i == 999)
                 p.style.stroke = "red";
             //p.style.stroke = "red";
