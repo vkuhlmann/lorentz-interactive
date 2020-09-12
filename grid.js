@@ -67,24 +67,40 @@ class Grid {
         let thisView = this.view;
         let otherView = views[0];
 
-        let dirX = lorentzTransform(otherView.globalBeta, new DOMPoint(1.0, 0.0).matrixTransform(transf), thisView.globalBeta);
-        let dirY = lorentzTransform(otherView.globalBeta, new DOMPoint(0.0, 1.0).matrixTransform(transf), thisView.globalBeta);
+        let dirX = lorentzTransform(thisView.globalBeta, new DOMPoint(1.0, 0.0).matrixTransform(transf), otherView.globalBeta);
+        let dirY = lorentzTransform(thisView.globalBeta, new DOMPoint(0.0, 1.0).matrixTransform(transf), otherView.globalBeta);
 
         // if (dirX.x * dirX.x + dirX.y * dirX.y < 0.01 * 0.01)
         //     return;
         // if (dirY.x * dirY.x + dirY.y * dirY.y < 0.01 * 0.01)
         //     return;
 
-        if (dirX.x < 0)
+        // if (dirX.x < 0)
+        //     dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
+        let startOnTop = true;// dirX.x * dirX.y >= 0;
+        let startOnLeft = startOnTop ^ (dirY.y * dirY.x >= 0);
+        // if (dirX.y < 0)
+        //     dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
+
+        // if ((dirX.x >= 0) != startOnLeft) {
+        //     dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
+        // }
+        // let startOnTop = dirX.y >= 0;
+        // let startOnLeft = dirX.x >= 0;
+
+        let logicalStartPoint = new DOMPoint(
+            startOnLeft ? boundRect.x : boundRect.x + boundRect.width, 
+            startOnTop ? boundRect.y : boundRect.y + boundRect.height);
+        if (logicalStartPoint.x * dirX.x + logicalStartPoint.y * dirX.y > 0)
             dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
-        let logicalStartPoint = new DOMPoint(boundRect.x, dirX.y >= 0 ? boundRect.y : boundRect.y + boundRect.height);
-        logicalStartPoint = lorentzTransform(thisView.globalBeta, logicalStartPoint, otherView.globalBeta);
+
+        logicalStartPoint = lorentzTransform(otherView.globalBeta, logicalStartPoint, thisView.globalBeta);
         logicalStartPoint = logicalStartPoint.matrixTransform(transf.inverse());
         let logicalStartX = Math.floor(logicalStartPoint.x);
         let logicalStartY = Math.floor(logicalStartPoint.y);
 
         let start = new DOMPoint(logicalStartX, logicalStartY).matrixTransform(transf);
-        start = lorentzTransform(otherView.globalBeta, start, thisView.globalBeta);
+        start = lorentzTransform(thisView.globalBeta, start, otherView.globalBeta);
 
         let i = 0;
         while (true) {

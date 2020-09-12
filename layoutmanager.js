@@ -371,10 +371,11 @@ function createDiagramCard() {
         slider.valueFormatted = "";
         slider.noFormattedSet = false;
 
-        slider.setValue = function (val) {
+        slider.setValue = function (val, sliderOnly = false) {
             val = parseFloat(val);
             try {
-                card.diagramView.setSpeed(other.diagramView, val);
+                if (sliderOnly !== true)
+                    card.diagramView.setSpeed(other.diagramView, val);
             } catch (ex) {
                 alert(ex);
                 slider.updateValue();
@@ -562,6 +563,22 @@ function setNextLabel(val) {
         $("#nextlabel").css("color", "");
         $("#nextlabel")[0].value = val;
     }
+}
+
+function lorentzTransform(targetGlobalBeta, point, sourceGlobalBeta) {
+    let x = point.x;
+    let ct = point.ct || -point.y;
+
+    let beta =
+        (sourceGlobalBeta - targetGlobalBeta) / (1 - sourceGlobalBeta * targetGlobalBeta);
+
+    let gamma = Math.sqrt(1 / (1 - (beta * beta)))
+    let xTransf = gamma * (x + beta * ct);
+    let ctTransf = gamma * (ct + beta * x);
+
+    let a = new DOMPoint(xTransf, -ctTransf);
+    a.ct = ctTransf;
+    return a;
 }
 
 function createLayout() {
