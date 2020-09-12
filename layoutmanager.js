@@ -468,6 +468,9 @@ function createDiagramCard() {
     for (let m of autoMarkings) {
         m.addToView(diagramView);
     }
+    for (let g of autoGrids) {
+        g.addToView(diagramView);
+    }
 
     card.producePng = function (pictureElements) {
         if (pictureElements == null || pictureElements.length == 0)

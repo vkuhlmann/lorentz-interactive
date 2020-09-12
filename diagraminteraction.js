@@ -37,6 +37,7 @@ let handleDiagramAvailable = false;
 
 let views = [];
 let autoMarkings = [];
+let autoGrids = [];
 
 let nextViewID = 0;
 

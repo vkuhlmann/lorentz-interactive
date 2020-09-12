@@ -21,42 +21,63 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-class Grid {
-    constructor(view) {
-        this.matrix = new DOMMatrix().scaleSelf(10, 10);
+class GridPresence {
+    constructor(grid, view) {
+        this.grid = grid;
         this.lines = [];
         this.view = view;
         this.view.grids.push(this);
+        this.keepInvisible = false;
+        this.isVisible = false;
 
-        let grids = $("[data-id=grids]", view.el)[0];
+        let grids = $("[data-id=grids]", this.view.el)[0];
         this.el = document.createElementNS("http://www.w3.org/2000/svg", "g");
         grids.appendChild(this.el);
 
-        this.recreate();
-
-        const grid = this;
-        views[0].speedDependencies.push(function () {
-            this.recreate();
+        const gridPresence = this;
+        this.grid.baseView.speedDependencies.push(function () {
+            gridPresence.recreate();
         });
+        this.setVisible(true);
+    }
+
+    updateVisibility() {
+        this.setVisible(this.intentionVisible);
+    }
+
+    setVisible(val, forceKeepCurr = false) {
+        val = (val === true || val > 0 || (typeof (val) == "string" && val.toLowerCase() == "true"));
+        this.intentionVisible = val;
+
+        val = this.intentionVisible && (this.grid.isVisible ||
+            (this.grid.overrideMainVisible && this.grid.baseView == this.view));
+
+        if (val == this.isVisible)
+            return;
+        this.isVisible = val;
+        if (this.isVisible || (!forceKeepCurr && !this.keepInvisible))
+            this.recreate();
+
+        this.el.style.visibility = this.isVisible ? "visible" : "hidden";
+    }
+
+    getVisible() {
+        return this.isVisible;
     }
 
     onViewBetaSet(beta) {
         this.recreate();
     }
 
-    recreate() {
+    recreate(force = false) {
         this.lines = [];
         while (this.el.hasChildNodes())
             this.el.removeChild(this.el.childNodes[0]);
 
-        this.placeSeries()
-
-        let origMatrix = this.matrix;
-        let rotatedMatrix = origMatrix.rotate(0, 0, -90);
-        this.matrix = rotatedMatrix;
-        this.placeSeries();
-
-        this.matrix = origMatrix;
+        if (!this.isVisible && !this.keepInvisible)
+            return;
+        this.placeSeries(this.grid.matrix)
+        this.placeSeries(this.grid.matrix.rotate(0, 0, -90));
     }
 
     cropInfiniteToBounds(basePoint, dir, bounds) {
@@ -93,11 +114,14 @@ class Grid {
             new DOMPoint(basePoint.x + dir.x * currentMax, basePoint.y + dir.y * currentMax)];
     }
 
-    addFiniteLine(posStart, posEnd, data = {}) {
+    addFiniteLine(posStart, posEnd, style = {}, data = {}) {
         let p = document.createElementNS("http://www.w3.org/2000/svg", "path");
         p.setAttribute("d", `M ${posStart.x} ${posStart.y} ${posEnd.x} ${posEnd.y}`);
+
         p.style.strokeWidth = 0.1;
         p.style.strokeDasharray = "1 1.5";
+        Object.assign(p.style, style);
+
         // if (i == 999)
         //     p.style.stroke = "red";
 
@@ -107,20 +131,19 @@ class Grid {
         return obj;
     }
 
-    addInfiniteLine(basePoint, dir, bounds, data = {}) {
+    addInfiniteLine(basePoint, dir, bounds, style = {}, data = {}) {
         let pos = this.cropInfiniteToBounds(basePoint, dir, bounds);
         if (pos === null)
             return null;
         let [posStart, posEnd] = pos;
         data["infDir"] = dir;
         data["infCropBounds"] = bounds;
-        return this.addFiniteLine(posStart, posEnd, data);
+        return this.addFiniteLine(posStart, posEnd, style, data);
     }
 
-    placeSeries() {
+    placeSeries(transf) {
         let boundRect = this.view.coordinatePlaced.getCurrentViewBounds();
 
-        let transf = this.matrix;
         let thisView = this.view;
         let otherView = views[0];
 
@@ -146,7 +169,7 @@ class Grid {
 
         for (let i = 0; i < 1000; i++) {
             let basePoint = new DOMPoint(start.x + dirX.x * i, start.y + dirX.y * i);
-            let res = this.addInfiniteLine(basePoint, dirY, boundRect, {});
+            let res = this.addInfiniteLine(basePoint, dirY, boundRect, this.grid.gridLineStyle, {});
             if (res === null) {
                 if (i < 1)
                     continue;
@@ -154,5 +177,37 @@ class Grid {
                     break;
             }
         }
+    }
+}
+
+class Grid {
+    constructor(baseView) {
+        this.baseView = baseView;
+        this.matrix = new DOMMatrix().scaleSelf(10, 10);
+        this.presences = [];
+        this.isVisible = true;
+        this.overrideMainVisible = true;
+        this.gridLineStyle = {};
+
+        // this.gridLineStyle["stroke-width"] = 0.1;
+        // this.gridLineStyle["stroke-dasharray"] = "1 1.5";
+        this.gridLineStyle["stroke"] = "red";
+
+        autoGrids.push(this);
+        for (let v of views) {
+            this.addToView(v);
+        }
+    }
+
+    setVisible(val = true, mainVisible = true) {
+        this.isVisible = val;
+        this.overrideMainVisible = mainVisible;
+        for (let pres of presences) {
+            pres.updateVisibility();
+        }
+    }
+
+    addToView(view) {
+        this.presences.push(new GridPresence(this, view));
     }
 }
