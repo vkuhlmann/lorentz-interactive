@@ -81,7 +81,7 @@ function createDiagramCard(obj = {}) {
     diagramView.coordinatePlaced = { el: $("[data-id=\"coordinatePlaced\"]", diagramView.svgElem.el)[0] };
     diagramView.el.style.border = `2px solid ${diagramView.color}`;
     diagramView.el.style.borderRadius = `0.5rem`;
-    diagramView.el.style.overflow = "hidden";
+    //diagramView.el.style.overflow = "hidden";
 
     diagramView.coordinatePlaced.toClientSpace = function (p) {
         return DOMPoint.fromPoint(p).matrixTransform(new DOMMatrix().scaleSelf(diagramView.zoom, diagramView.zoom).preMultiplySelf(diagramView.svgIndications.el.getScreenCTM()));
