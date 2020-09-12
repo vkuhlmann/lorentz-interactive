@@ -545,6 +545,7 @@ function setDiagramHandle(handlers) {
 }
 
 let isPointAddModus;
+let isRectangleAddModus;
 let isPanModus;
 let nextLabel = "";
 let isClearNextLabel;
@@ -632,6 +633,7 @@ function createLayout() {
     maxColumnCount = null;
     isColumnWidthFixed = false;
     isPointAddModus = false;
+    isRectangleAddModus = false;
     isClearNextLabel = false;
 
     $("#max-columns-minus").click(function (ev) {
@@ -684,6 +686,35 @@ function createLayout() {
 
     $("#interaction-addpoint").click(function (ev) {
         toggleAddPoint();
+    });
+
+    let toggleAddRectangle = function () {
+        if (isRectangleAddModus) {
+            setDiagramHandle({});
+        } else {
+            $("#interaction-addrectangle").addClass("btn-primary");
+            $("#interaction-addrectangle").removeClass("btn-outline-info");
+
+            isRectangleAddModus = true;
+            setDiagramHandle({
+                click: function (event, pos, card) {
+                    Rectangle.create({
+                        type: "point", minX: pos.x - 10, maxX: pos.x + 10,
+                        minCt: -pos.y - 10, maxCt: -pos.y + 10, label: takeNextLabel()
+                    }, card.diagramView);
+                    setDiagramHandle({});
+                },
+                dismiss: function () {
+                    isRectangleAddModus = false;
+                    $("#interaction-addrectangle").addClass("btn-outline-info");
+                    $("#interaction-addrectangle").removeClass("btn-primary");
+                }
+            });
+        }
+    }
+
+    $("#interaction-addrectangle").click(function (ev) {
+        toggleAddRectangle();
     });
 
     let togglePan = function () {

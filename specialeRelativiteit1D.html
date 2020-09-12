@@ -101,6 +101,7 @@ SOFTWARE.
 	<script src="pointmarking.js"></script>
 	<script src="layoutmanager.js"></script>
 	<script src="grid.js"></script>
+	<script src="rectangle.js"></script>
 
 	<style>
 		body {
@@ -232,6 +233,12 @@ SOFTWARE.
 								<text data-binding="label" x="2.2" y="2"
 									style="font:normal 4.9389px sans-serif;">Element
 									a</text>
+							</g>
+							<g id="template-rectangle">
+								<!--<circle cx="0" cy="0" r="1.1588" data-binding="centerpoint" />-->
+								<text data-id="label" data-binding="label" x="2.2" y="2"
+									style="font:normal 4.9389px sans-serif;" fill="black">Element a</text>
+								<path data-id="shape" d="M 0 0 h 20 v 20 h -20 z" />
 							</g>
 						</defs>
 
@@ -450,6 +457,61 @@ SOFTWARE.
 				</div>
 			</div>
 
+			<div class="template card" id="rectangleEditPanel" style="width:400px;display:block;position:absolute;">
+				<div class="panel-grip card-header" style="position:relative;">
+					<table style="width:100%;">
+						<tr>
+							<td style="width:100%;">
+								Edit rectangle
+							</td>
+							<td>
+								<button class="btn btn-outline-primary" id="marking-delete"
+									data-binding="deleteMarking">
+									<!-- From Bootstrap Icons, used under MIT license -->
+									<svg width="auto" height="1em" viewBox="0 0 16 16" class="bi bi-trash"
+										fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+										<path
+											d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+										<path fill-rule="evenodd"
+											d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
+									</svg>
+									<!-- From Bootstrap Icons, used under MIT license -->
+									<!--<svg width="auto" height="2em" viewBox="0 0 16 16" class="bi bi-x-square-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+									<path fill-rule="evenodd" d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
+								</svg>-->
+								</button>
+							</td>
+							<td>
+								<button data-binding="close" type="button" class="btn btn-danger">Close</button>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div class="container card-body" style="position:relative;width:100%;">
+					<div class="form-group" style="width:100%;position:relative;">
+						<label>Color:</label>
+						<input type="color" data-binding="color" id="pointColor" name="favcolor" value="#ff0000">
+						<br />
+
+						<label for="pointLabel">Label:</label>
+						<input type="text" class="form-control" data-binding="label" />
+						<br />
+
+						<label>x:</label>
+						<div id="rectX" style="display:flex;flex-flow:row wrap;align-content:stretch;">
+							<input type="text" class="form-control" data-binding="minX" style="flex: 1 1 100px;" />
+							<input type="text" class="form-control" data-binding="maxX" style="flex: 1 1 100px;" />
+						</div>
+						<label>ct:</label>
+						<div id="rectCt" style="display:flex;flex-flow:row wrap;align-content:stretch;">
+							<input type="text" class="form-control" data-binding="minCt" style="flex: 1 1 100px;" />
+							<input type="text" class="form-control" data-binding="maxCt" style="flex: 1 1 100px;" />
+						</div>
+
+					</div>
+				</div>
+			</div>
+
 			<div id="card" style="display:block;background-color:#ddd" class="lorentz-card card template">
 				<div class="card-header" style="overflow:auto;">
 					<table style="border:0px;">
@@ -587,6 +649,10 @@ SOFTWARE.
 
 					<li class="nav-item" style="margin-left:10px;">
 						<button type="button" class="btn btn-outline-info" id="interaction-addpoint">Add point</button>
+					</li>
+					<li class="nav-item" style="margin-left:10px;">
+						<button type="button" class="btn btn-outline-info" id="interaction-addrectangle">Add
+							rectangle</button>
 					</li>
 					<li class="nav-item">
 						<button type="button" class="btn btn-outline-info" id="interaction-pan">Pan</button>
