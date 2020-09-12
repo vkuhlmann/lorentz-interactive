@@ -164,16 +164,21 @@ class GridPresence {
         let dirX = lorentzTransform(thisView.globalBeta, new DOMPoint(1.0, 0.0).matrixTransform(transf), otherView.globalBeta);
         let dirY = lorentzTransform(thisView.globalBeta, new DOMPoint(0.0, 1.0).matrixTransform(transf), otherView.globalBeta);
         dirX = new DOMPoint(dirX.x, dirX.y, 0.0, 0.0);
-        dirY = new DOMPoint(dirY.x, dirY.y, 0.0, 0.0);
+        dirY = new DOMPoint(dirY.x / Math.sqrt(dirY.x * dirY.x + dirY.y * dirY.y),
+            dirY.y / Math.sqrt(dirY.x * dirY.x + dirY.y * dirY.y), 0.0, 0.0);
 
         let startOnTop = true;// dirX.x * dirX.y >= 0;
-        let startOnLeft = startOnTop ^ (dirY.y * dirY.x >= 0);
+        let startOnLeft = startOnTop != (dirY.y * dirY.x >= 0);
 
         let logicalStartPoint = new DOMPoint(
             startOnLeft ? boundRect.x : boundRect.x + boundRect.width,
             startOnTop ? boundRect.y : boundRect.y + boundRect.height);
-        if ((logicalStartPoint.x - (boundRect.x + boundRect.width / 2)) * dirX.x +
-            (logicalStartPoint.y - (boundRect.y + boundRect.height / 2)) * dirX.y > 0)
+
+        let parComp = dirX.x * dirY.x + dirX.y * dirY.y;
+        let orthDir = new DOMPoint(dirX.x - parComp * dirY.x, dirX.y - parComp * dirY.y);
+
+        if ((logicalStartPoint.x - (boundRect.x + boundRect.width / 2)) * orthDir.x +
+            (logicalStartPoint.y - (boundRect.y + boundRect.height / 2)) * orthDir.y > 0)
             dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
 
         logicalStartPoint = lorentzTransform(otherView.globalBeta, logicalStartPoint, thisView.globalBeta);
