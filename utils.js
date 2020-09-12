@@ -24,6 +24,8 @@ function bindInput(el, context, targetName, listeners, applyListeners = true) {
     if (typeof (context[targetName]) != "string" && isNaN(context[targetName]))
         return false;
 
+    let suppressState = {suppressWhenLive: true, suppress: false};
+
     el.value = context[targetName];
     if (context.bindings != null) {
         if (context.bindings[targetName] == null)
@@ -31,7 +33,10 @@ function bindInput(el, context, targetName, listeners, applyListeners = true) {
 
         context.bindings[targetName].push({
             el: el,
-            update: () => el.value = context[targetName]
+            update: function () {
+                if (!suppressState.suppress)
+                    el.value = context[targetName]
+            }
         });
     }
 
@@ -50,9 +55,13 @@ function bindInput(el, context, targetName, listeners, applyListeners = true) {
     let bindEntry = {
         event: "input",
         el: el,
+        suppressState: suppressState,
         function: function () {
             try {
+                if (suppressState.suppressWhenLive)
+                    suppressState.suppress = true;
                 context[funcNameLive](el.value);
+                suppressState.suppress = false;
             } catch (ex) { }
         }
     }

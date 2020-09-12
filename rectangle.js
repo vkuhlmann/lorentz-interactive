@@ -321,6 +321,7 @@ class Rectangle {
         for (let v of views) {
             this.addToView(v);
         }
+        this.suppressSet = false;
 
         //this.setPosition(this.minX, this.maxX, this.minCt, this.maxCt);
     }
@@ -351,11 +352,31 @@ class Rectangle {
     };
 
     setMinXFormatted(x) {
-        this.setMinX(parseFloat(x));
+        let minXIntention = parseFloat(x);
+        let maxXIntention = this.maxXIntention || this.maxX;
+        this.minXIntention = null;
+        this.maxXIntention = null;
+
+        this.setPosition(minXIntention, maxXIntention, this.minCt, this.maxCt);
+    };
+    setMinXFormattedLive(x) {
+        this.minXIntention = parseFloat(x);
+        this.maxXIntention = this.maxXIntention || this.maxX;
+        this.setPosition(this.minXIntention, this.maxXIntention, this.minCt, this.maxCt);
     };
 
     setMaxXFormatted(x) {
-        this.setMaxX(parseFloat(x));
+        let minXIntention = this.minXIntention || this.minX;
+        let maxXIntention = parseFloat(x);
+        this.minXIntention = null;
+        this.maxXIntention = null;
+
+        this.setPosition(minXIntention, maxXIntention, this.minCt, this.maxCt);
+    };
+    setMaxXFormattedLive(x) {
+        this.minXIntention = this.minXIntention || this.minX;
+        this.maxXIntention = parseFloat(x);
+        this.setPosition(this.minXIntention, this.maxXIntention, this.minCt, this.maxCt);
     };
 
     setMinCtFormatted(ct) {
@@ -366,17 +387,16 @@ class Rectangle {
         this.setMaxCt(parseFloat(ct));
     };
 
-
     setPosition(minX, maxX, minCt, maxCt) {
-        this.minX = minX;
-        this.maxX = maxX;
-        this.minCt = minCt;
-        this.maxCt = maxCt;
+        this.minX = Math.min(minX, maxX);
+        this.maxX = Math.max(minX, maxX);
+        this.minCt = Math.min(minCt, maxCt);
+        this.maxCt = Math.max(minCt, maxCt);
 
-        this.minXFormatted = `${this.minX.toFixed(2)} cs`;
-        this.maxXFormatted = `${this.maxX.toFixed(2)} cs`;
-        this.minCtFormatted = `${this.minCt.toFixed(2)} cs`;
-        this.maxCtFormatted = `${this.maxCt.toFixed(2)} cs`;
+        this.minXFormatted = `${(this.minXIntention ?? this.minX).toFixed(2)} cs`;
+        this.maxXFormatted = `${(this.maxXIntention ?? this.maxX).toFixed(2)} cs`;
+        this.minCtFormatted = `${(this.minCtIntention ?? this.minCt).toFixed(2)} cs`;
+        this.maxCtFormatted = `${(this.maxCtIntention ?? this.maxCt).toFixed(2)} cs`;
 
         this.pointTopLeft = new DOMPoint(minX, -maxCt);
         this.pointTopRight = new DOMPoint(maxX, -maxCt);
