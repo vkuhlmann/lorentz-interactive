@@ -137,16 +137,14 @@ class PointMarkingPresence {
         this.onViewBetaSet(view.globalBeta);
         this._updateColor();
 
-        const pointmarkerpresence = this;
-
         const presence = this;
         this.el.addEventListener("pointerover",
             function () {
-                presence.editHover(pointmarkerpresence);
+                presence.editHover();
             });
         this.el.addEventListener("click",
             function () {
-                presence.editOpen(pointmarkerpresence);
+                presence.editOpen();
             });
 
         bindElements(el, [this, this.controller]);

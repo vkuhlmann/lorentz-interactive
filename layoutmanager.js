@@ -699,7 +699,7 @@ function createLayout() {
             setDiagramHandle({
                 click: function (event, pos, card) {
                     Rectangle.create({
-                        type: "point", minX: pos.x - 10, maxX: pos.x + 10,
+                        type: "point", minX: pos.x - 2, maxX: pos.x + 2,
                         minCt: -pos.y - 10, maxCt: -pos.y + 10, label: takeNextLabel()
                     }, card.diagramView);
                     setDiagramHandle({});

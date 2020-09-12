@@ -128,24 +128,43 @@ class RectanglePresence {
         //this.el.id = `view${view.id}_marking${markingID}`;
         markingID += 1;
 
+        const presence = this;
+
         this.onViewBetaSet(view.globalBeta);
         this._updateColor();
 
-        const pointmarkerpresence = this;
-
-        const presence = this;
         this.el.addEventListener("pointerover",
             function () {
-                presence.editHover(pointmarkerpresence);
+                presence.editHover();
             });
         this.el.addEventListener("click",
             function () {
-                presence.editOpen(pointmarkerpresence);
+                presence.editOpen();
             });
 
         bindElements(this.el, [this, this.controller]);
+        this.controller.bindings["label"] = this.controller.bindings["label"] || [];
+        this.controller.bindings["label"].push({
+            update: function() {
+                presence.repositionLabel();
+            }
+        });
+
         activateTemplateInstance(this.el);
+        this.repositionLabel();
     };
+
+    repositionLabel() {
+        // $("[data-binding=centerpoint]", this.el)[0].setAttribute("cx", this.barycenter.x);
+        // $("[data-binding=centerpoint]", this.el)[0].setAttribute("cy", this.barycenter.y);
+
+        let labelBox = this.labelElement.el.getBBox();
+        let labelPlacePos = new DOMPoint(this.barycenter.x - labelBox.width / 2, this.barycenter.y)
+            .matrixTransform(new DOMMatrix().scaleSelf(this.zoom, this.zoom));
+
+        this.labelElement.el.setAttribute("x", `${labelPlacePos.x.toFixed(2)}`);
+        this.labelElement.el.setAttribute("y", `${labelPlacePos.y.toFixed(2)}`);
+    }
 
     editHover() {
         let rect = this.el.getBoundingClientRect();
@@ -166,7 +185,7 @@ class RectanglePresence {
 
     editOpen() {
         if (this.controller.currentEditPanel == null) {
-            new PointMarkingEditPanel(this);
+            new RectangleEditPanel(this);
         }
         setTopPanel(this.controller.currentEditPanel);
         return true;
@@ -210,13 +229,13 @@ class RectanglePresence {
         for (let p of this.controller.points)
             this.transformedPoints.push(lorentzTransform(this.view.globalBeta, p, this.controller.positionView.globalBeta));
 
-        this.baryCenter = { x: 0, y: 0 };
+        this.barycenter = { x: 0, y: 0 };
         for (let p of this.transformedPoints) {
-            this.baryCenter.x += p.x;
-            this.baryCenter.y -= p.ct;
+            this.barycenter.x += p.x;
+            this.barycenter.y -= p.ct;
         }
-        this.baryCenter.x /= this.transformedPoints.length;
-        this.baryCenter.y /= this.transformedPoints.length;
+        this.barycenter.x /= this.transformedPoints.length;
+        this.barycenter.y /= this.transformedPoints.length;
 
         this.shapeString = "M ";
         for (let p of this.transformedPoints)
@@ -224,7 +243,7 @@ class RectanglePresence {
         this.shapeString += "Z";
         this.shape.el.setAttribute("d", this.shapeString);
 
-        this.labelElement.el.setAttribute("transform", `translate(${this.baryCenter.x * this.view.zoom} ${this.baryCenter.y * this.view.zoom})`);
+        this.repositionLabel();
     }
 
     _setColor(c) {
@@ -329,29 +348,56 @@ class Rectangle {
         this.setPosition(this.minX, this.maxX, this.minCt, parseFloat(ct));
     };
 
+    setMinXFormatted(x) {
+        this.setMinX(parseFloat(x));
+    };
+
+    setMaxXFormatted(x) {
+        this.setMaxX(parseFloat(x));
+    };
+
+    setMinCtFormatted(ct) {
+        this.setMinCt(parseFloat(ct));
+    };
+
+    setMaxCtFormatted(ct) {
+        this.setMaxCt(parseFloat(ct));
+    };
+
+
     setPosition(minX, maxX, minCt, maxCt) {
         this.minX = minX;
         this.maxX = maxX;
         this.minCt = minCt;
         this.maxCt = maxCt;
 
+        this.minXFormatted = `${this.minX.toFixed(2)} cs`;
+        this.maxXFormatted = `${this.maxX.toFixed(2)} cs`;
+        this.minCtFormatted = `${this.minCt.toFixed(2)} cs`;
+        this.maxCtFormatted = `${this.maxCt.toFixed(2)} cs`;
+
         this.pointTopLeft = new DOMPoint(minX, -maxCt);
         this.pointTopRight = new DOMPoint(maxX, -maxCt);
         this.pointBottomLeft = new DOMPoint(minX, -minCt);
         this.pointBottomRight = new DOMPoint(maxX, -minCt);
         this.points = [this.pointTopLeft, this.pointTopRight,
-        this.pointBottomLeft, this.pointBottomRight];
+        this.pointBottomRight, this.pointBottomLeft];
 
         updateBinding(this, "minX");
         updateBinding(this, "maxX");
         updateBinding(this, "minCt");
         updateBinding(this, "maxCt");
+
+        updateBinding(this, "minXFormatted");
+        updateBinding(this, "maxXFormatted");
+        updateBinding(this, "minCtFormatted");
+        updateBinding(this, "maxCtFormatted");
         this._recalcPositions();
     }
 
     _recalcPositions() {
         for (let pres of this.presences) {
-            pres._recalcPosition();
+            pres.updatePosition();
         }
     };
 
