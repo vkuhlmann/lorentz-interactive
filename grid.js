@@ -119,7 +119,21 @@ class GridPresence {
         p.setAttribute("d", `M ${posStart.x} ${posStart.y} ${posEnd.x} ${posEnd.y}`);
 
         p.style.strokeWidth = 0.1;
-        p.style.strokeDasharray = "1 1.5";
+
+        let dashes = data.dashes || [1, 1.5];
+        let dashesString = "";
+        for (let dash of dashes)
+            dashesString += `${dash}px `;
+        dashesString = dashesString.trim();
+
+        p.style.strokeDasharray = dashesString;
+
+        let dashPatternLength = 0;
+        for (let dash of dashes)
+            dashPatternLength += dash;
+        let dashOffset = (posStart.x + posStart.y) % dashPatternLength;
+        p.style.strokeDashoffset = `${dashOffset}px`;
+
         Object.assign(p.style, style);
 
         // if (i == 999)
@@ -178,7 +192,7 @@ class GridPresence {
 
             let res = this.addInfiniteLine(basePoint.matrixTransform(placingTransf), dirY.matrixTransform(placingTransf),
                 new DOMRect(boundTopLeft.x, boundTopLeft.y, boundWidthHeight.x, boundWidthHeight.y),
-                boundRect, this.grid.gridLineStyle, {});
+                this.grid.gridLineStyle, {});
             if (res === null) {
                 if (i < 1)
                     continue;
@@ -199,7 +213,7 @@ class Grid {
         this.gridLineStyle = {};
 
         // this.gridLineStyle["stroke-width"] = 0.1;
-        // this.gridLineStyle["stroke-dasharray"] = "1 1.5";
+        // this.gridLineStyle.dashes = [1, 1.5];
         this.gridLineStyle["stroke"] = "red";
 
         autoGrids.push(this);
