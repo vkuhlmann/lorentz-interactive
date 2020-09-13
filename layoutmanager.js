@@ -259,8 +259,12 @@ function createDiagramCard(obj = {}) {
 
     let card = {
         diagramView: diagramView, el: createTemplateInstance("card", $("#cardsholder")[0]),
-        title: "Perspective", bindings: []
+        bindings: []
     };
+    card.perspectiveNumer = nextPerspectiveNumber;
+    nextPerspectiveNumber += 1;
+    card.title = `Perspective ${card.perspectiveNumer.toFixed(0)}`;
+
     card.viewSpeedControl = { el: $("[data-id=viewSpeedControl]", card.el)[0] };
     card.controlToggle = { el: $("[data-id=controlToggle]", card.el)[0] };
     card.controlToggle.el.addEventListener("click", function (ev) {
@@ -502,6 +506,11 @@ function createDiagramCard(obj = {}) {
     for (let pngEl of card.pngHolder.elements) {
         pngEl.addEventListener("contextmenu", card.updatePng);
         pngEl.addEventListener("click", card.updatePng);
+        pngEl.addEventListener("pointerover", function() {
+            card.updatePng();
+            //card.updatePng();
+            //$("[data-toggle=\"tooltip\"]", card.el).tooltip();
+        });
     }
 }
 
@@ -544,11 +553,12 @@ function setDiagramHandle(handlers) {
     handleDiagramAvailable = handlers != null && Object.keys(handlers).length > 0;
 }
 
-let isPointAddModus;
-let isRectangleAddModus;
+let pointAddToggleState;
+let rectangleAddToggleState;
 let isPanModus;
 let nextLabel = "";
 let isClearNextLabel;
+let nextPerspectiveNumber;
 
 function takeNextLabel() {
     let value = nextLabel;
@@ -564,8 +574,9 @@ function takeNextLabel() {
 function setNextLabel(val) {
     nextLabel = val.trim();
     if (nextLabel.length > 0) {
-        $("#nextlabel-clear").addClass("btn-outline-info");
-        $("#nextlabel-clear").removeClass("btn-primary");
+        $("#nextlabel-clear").removeClass("toggled");
+        // $("#nextlabel-clear").addClass("btn-outline-info");
+        // $("#nextlabel-clear").removeClass("btn-primary");
         isClearNextLabel = false;
     }
     if (isClearNextLabel) {
@@ -603,6 +614,7 @@ function getNextColor() {
 
 function createLayout() {
     nextColorIndex = 0;
+    nextPerspectiveNumber = 1;
 
     createDiagramCard();
     createDiagramCard();
@@ -632,8 +644,8 @@ function createLayout() {
 
     maxColumnCount = null;
     isColumnWidthFixed = false;
-    isPointAddModus = false;
-    isRectangleAddModus = false;
+    pointAddToggleState = 0;
+    rectangleAddToggleState = 0;
     isClearNextLabel = false;
 
     $("#max-columns-minus").click(function (ev) {
@@ -651,34 +663,54 @@ function createLayout() {
     $("#columns-fixwidth").click(function (ev) {
         if (isColumnWidthFixed) {
             isColumnWidthFixed = false;
-            $("#columns-fixwidth").addClass("btn-outline-info");
-            $("#columns-fixwidth").removeClass("btn-primary");
+            $("#columns-fixwidth").removeClass("toggled");
+
+            // $("#columns-fixwidth").addClass("btn-outline-info");
+            // $("#columns-fixwidth").removeClass("btn-primary");
 
         } else {
             isColumnWidthFixed = true;
-            $("#columns-fixwidth").addClass("btn-primary");
-            $("#columns-fixwidth").removeClass("btn-outline-info");
+            $("#columns-fixwidth").addClass("toggled");
+
+            // $("#columns-fixwidth").addClass("btn-primary");
+            // $("#columns-fixwidth").removeClass("btn-outline-info");
         }
         setCardColumns(maxColumnCount, isColumnWidthFixed);
     });
 
     let toggleAddPoint = function () {
-        if (isPointAddModus) {
+        if (pointAddToggleState == 2) {
             setDiagramHandle({});
-        } else {
-            $("#interaction-addpoint").addClass("btn-primary");
-            $("#interaction-addpoint").removeClass("btn-outline-info");
 
-            isPointAddModus = true;
+        } else if (pointAddToggleState == 1) {
+            pointAddToggleState = 2;
+            $("#interaction-addpoint").addClass("toggled");
+            $("#interaction-addpoint").addClass("second-stage");
+
+            // $("#interaction-addpoint").addClass("btn-success");
+            // $("#interaction-addpoint").removeClass("btn-primary");
+
+        } else {
+            // $("#interaction-addpoint").addClass("btn-primary");
+            // $("#interaction-addpoint").removeClass("btn-outline-info");
+            $("#interaction-addpoint").addClass("toggled");
+
+            pointAddToggleState = 1;
             setDiagramHandle({
                 click: function (event, pos, card) {
                     PointMarking.create({ type: "point", x: pos.x, ct: -pos.y, label: takeNextLabel() }, card.diagramView);
-                    setDiagramHandle({});
+                    if (pointAddToggleState == 1)
+                        setDiagramHandle({});
                 },
                 dismiss: function () {
-                    isPointAddModus = false;
-                    $("#interaction-addpoint").addClass("btn-outline-info");
-                    $("#interaction-addpoint").removeClass("btn-primary");
+                    pointAddToggleState = 0;
+                    // $("#interaction-addpoint").addClass("btn-outline-info");
+                    // $("#interaction-addpoint").removeClass("btn-primary");
+                    // $("#interaction-addpoint").removeClass("btn-info");
+                    // $("#interaction-addpoint").removeClass("btn-success");
+
+                    $("#interaction-addpoint").removeClass("toggled");
+                    $("#interaction-addpoint").removeClass("second-stage");
                 }
             });
         }
@@ -689,13 +721,21 @@ function createLayout() {
     });
 
     let toggleAddRectangle = function () {
-        if (isRectangleAddModus) {
+        if (rectangleAddToggleState == 2) {
             setDiagramHandle({});
-        } else {
-            $("#interaction-addrectangle").addClass("btn-primary");
-            $("#interaction-addrectangle").removeClass("btn-outline-info");
+        } else if (rectangleAddToggleState == 1) {
+            rectangleAddToggleState = 2;
+            $("#interaction-addrectangle").addClass("toggled");
+            $("#interaction-addrectangle").addClass("second-stage");
+            // $("#interaction-addrectangle").addClass("btn-success");
+            // $("#interaction-addrectangle").removeClass("btn-primary");
 
-            isRectangleAddModus = true;
+        } else {
+            // $("#interaction-addrectangle").addClass("btn-primary");
+            // $("#interaction-addrectangle").removeClass("btn-outline-info");
+            $("#interaction-addrectangle").addClass("toggled");
+
+            rectangleAddToggleState = 1;
             setDiagramHandle({
                 click: function (event, pos, card) {
                     let alignX = 5;
@@ -707,12 +747,19 @@ function createLayout() {
                         type: "point", minX: left, maxX: left + 5.0,
                         minCt: -top - 20, maxCt: -top, label: takeNextLabel()
                     }, card.diagramView);
-                    setDiagramHandle({});
+
+                    if (rectangleAddToggleState == 1)
+                        setDiagramHandle({});
                 },
                 dismiss: function () {
-                    isRectangleAddModus = false;
-                    $("#interaction-addrectangle").addClass("btn-outline-info");
-                    $("#interaction-addrectangle").removeClass("btn-primary");
+                    rectangleAddToggleState = 0;
+                    // $("#interaction-addrectangle").addClass("btn-outline-info");
+                    // $("#interaction-addrectangle").removeClass("btn-primary");
+                    // $("#interaction-addrectangle").removeClass("btn-info");
+                    // $("#interaction-addrectangle").removeClass("btn-success");
+
+                    $("#interaction-addrectangle").removeClass("toggled");
+                    $("#interaction-addrectangle").removeClass("second-stage");
                 }
             });
         }
@@ -726,8 +773,9 @@ function createLayout() {
         if (isPanModus) {
             setDiagramHandle({});
         } else {
-            $("#interaction-pan").addClass("btn-primary");
-            $("#interaction-pan").removeClass("btn-outline-info");
+            // $("#interaction-pan").addClass("btn-primary");
+            // $("#interaction-pan").removeClass("btn-outline-info");
+            $("#interaction-pan").addClass("toggled");
 
             $(".pannable-diagram").css("cursor", "all-scroll");
 
@@ -770,8 +818,9 @@ function createLayout() {
                     isPanModus = false;
                     $(".pannable-diagram").css("cursor", "");
 
-                    $("#interaction-pan").addClass("btn-outline-info");
-                    $("#interaction-pan").removeClass("btn-primary");
+                    // $("#interaction-pan").addClass("btn-outline-info");
+                    // $("#interaction-pan").removeClass("btn-primary");
+                    $("#interaction-pan").removeClass("toggled");
                 }
             });
         }
@@ -795,8 +844,7 @@ function createLayout() {
         } else {
             isClearNextLabel = true;
             setNextLabel("");
-            $("#nextlabel-clear").addClass("btn-primary");
-            $("#nextlabel-clear").removeClass("btn-outline-info");
+            $("#nextlabel-clear").addClass("toggled");
         }
     });
 
