@@ -259,8 +259,12 @@ function createDiagramCard(obj = {}) {
 
     let card = {
         diagramView: diagramView, el: createTemplateInstance("card", $("#cardsholder")[0]),
-        title: "Perspective", bindings: []
+        bindings: []
     };
+    card.perspectiveNumer = nextPerspectiveNumber;
+    nextPerspectiveNumber += 1;
+    card.title = `Perspective ${card.perspectiveNumer.toFixed(0)}`;
+
     card.viewSpeedControl = { el: $("[data-id=viewSpeedControl]", card.el)[0] };
     card.controlToggle = { el: $("[data-id=controlToggle]", card.el)[0] };
     card.controlToggle.el.addEventListener("click", function (ev) {
@@ -549,6 +553,7 @@ let rectangleAddToggleState;
 let isPanModus;
 let nextLabel = "";
 let isClearNextLabel;
+let nextPerspectiveNumber;
 
 function takeNextLabel() {
     let value = nextLabel;
@@ -604,6 +609,7 @@ function getNextColor() {
 
 function createLayout() {
     nextColorIndex = 0;
+    nextPerspectiveNumber = 1;
 
     createDiagramCard();
     createDiagramCard();
