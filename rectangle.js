@@ -171,11 +171,13 @@ class RectanglePresence {
         let rect = this.el.getBoundingClientRect();
         let containerRect = this.view.el.getBoundingClientRect();
 
+        let intersectRect = getRectanglesIntersection(rect, containerRect);
+
         let margin = 10;
-        this.view.highlight.el.style.left = `${rect.x - containerRect.x - margin}px`;
-        this.view.highlight.el.style.top = `${rect.y - containerRect.y - margin}px`;
-        this.view.highlight.el.style.width = `${rect.width + 2 * margin}px`;
-        this.view.highlight.el.style.height = `${rect.height + 2 * margin}px`;
+        this.view.highlight.el.style.left = `${intersectRect.x - containerRect.x - margin}px`;
+        this.view.highlight.el.style.top = `${intersectRect.y - containerRect.y - margin}px`;
+        this.view.highlight.el.style.width = `${intersectRect.width + 2 * margin}px`;
+        this.view.highlight.el.style.height = `${intersectRect.height + 2 * margin}px`;
         this.view.highlight.el.style.display = "block";
 
         const presence = this;
@@ -242,7 +244,11 @@ class RectanglePresence {
         for (let p of this.transformedPoints) {
             pointsY.push(p.y);
         }
-        pointsY.sort();
+        pointsY.sort((a, b) => { a - b });
+        if (pointsY[1] > pointsY[2]) {
+            pointsY = pointsY;
+        }
+
         let minY = Math.max(pointsY[1], viewRect.y);
         let maxY = Math.min(pointsY[2], viewRect.y + viewRect.height);
         let placeY = (maxY + minY) / 2;
@@ -277,11 +283,17 @@ class RectanglePresence {
         this.shapeString += "Z";
         this.shape.el.setAttribute("d", this.shapeString);
 
+        if (Math.abs(this.controller.maxX - this.controller.minX) < 1e-2)
+            this.shape.el.style.strokeWidth = 1;
+        else
+            this.shape.el.style.strokeWidth = 0;
+
         this.repositionLabel();
     }
 
     _setColor(c) {
         this.el.style.fill = c;
+        this.shape.el.style.stroke = c;
     }
 
     _updateColor() {
@@ -419,6 +431,34 @@ class Rectangle {
         this.setMaxCt(parseFloat(ct));
     };
 
+    setMinCtFormatted(ct) {
+        let minCtIntention = parseFloat(ct);
+        let maxCtIntention = this.maxCtIntention || this.maxCt;
+        this.minCtIntention = null;
+        this.maxCtIntention = null;
+
+        this.setPosition(this.minX, this.maxX, minCtIntention, maxCtIntention);
+    };
+    setMinCtFormattedLive(ct) {
+        this.minCtIntention = parseFloat(ct);
+        this.maxCtIntention = this.maxCtIntention || this.maxCt;
+        this.setPosition(this.minX, this.maxX, this.minCtIntention, this.maxCtIntention);
+    };
+
+    setMaxCtFormatted(ct) {
+        let minCtIntention = this.minCtIntention || this.minCt;
+        let maxCtIntention = parseFloat(ct);
+        this.minCtIntention = null;
+        this.maxCtIntention = null;
+
+        this.setPosition(this.minX, this.maxX, minCtIntention, maxCtIntention);
+    };
+    setMaxCtFormattedLive(ct) {
+        this.minCtIntention = this.minCtIntention || this.minCt;
+        this.maxCtIntention = parseFloat(ct);
+        this.setPosition(this.minX, this.maxX, this.minCtIntention, this.maxCtIntention);
+    };
+
     setPosition(minX, maxX, minCt, maxCt) {
         this.minX = Math.min(minX, maxX);
         this.maxX = Math.max(minX, maxX);
@@ -430,10 +470,10 @@ class Rectangle {
         this.minCtFormatted = `${(this.minCtIntention ?? this.minCt).toFixed(2)} cs`;
         this.maxCtFormatted = `${(this.maxCtIntention ?? this.maxCt).toFixed(2)} cs`;
 
-        this.pointTopLeft = new DOMPoint(minX, -maxCt);
-        this.pointTopRight = new DOMPoint(maxX, -maxCt);
-        this.pointBottomLeft = new DOMPoint(minX, -minCt);
-        this.pointBottomRight = new DOMPoint(maxX, -minCt);
+        this.pointTopLeft = new DOMPoint(this.minX, -this.maxCt);
+        this.pointTopRight = new DOMPoint(this.maxX, -this.maxCt);
+        this.pointBottomLeft = new DOMPoint(this.minX, -this.minCt);
+        this.pointBottomRight = new DOMPoint(this.maxX, -this.minCt);
         this.points = [this.pointTopLeft, this.pointTopRight,
         this.pointBottomRight, this.pointBottomLeft];
 
