@@ -239,6 +239,9 @@ class RectanglePresence {
         this.barycenter.x /= this.transformedPoints.length;
         this.barycenter.y /= this.transformedPoints.length;
 
+        this.barycenter.x *= this.view.zoom;
+        this.barycenter.y *= this.view.zoom;
+
         this.shapeString = "M ";
         for (let p of this.transformedPoints)
             this.shapeString += `${(p.x * this.view.zoom).toFixed(2)} ${(-p.ct * this.view.zoom).toFixed(2)} `;
