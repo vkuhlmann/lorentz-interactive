@@ -71,7 +71,7 @@ function changeStylesheetRule(stylesheet, selector, property, value) {
 }
 
 $(document).ready(function () {
-    debugger;
+    //debugger;
 
     // views.push({ el: $("#diagram-view")[0], id: 0, markings: [] });
     // views[0].highlight = { el: $("#diagram-highlight", views[0].el)[0] };
