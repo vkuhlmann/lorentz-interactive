@@ -21,9 +21,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-class RectangleEditPanel extends Panel {
+class LightRayEditPanel extends Panel {
     constructor(presence) {
-        super($("#rectangleEditPanel")[0], presence.view);
+        super($("#lightRayEditPanel")[0], presence.view);
 
         this.presence = presence;
         this.isPinned = false;
@@ -109,11 +109,11 @@ class RectangleEditPanel extends Panel {
     }
 }
 
-class RectanglePresence {
+class LightRayPresence {
     constructor(controller, view) {
         this.view = view;
         let diagramIndications = $("[data-binding=diagram-indications]", this.view.el)[0];
-        this.el = createTemplateInstance("template-rectangle", diagramIndications);
+        this.el = createTemplateInstance("template-lightray", diagramIndications);
 
         this.shape = { el: $("[data-id=shape]", this.el)[0] };
         this.labelElement = { el: $("[data-id=label]", this.el)[0] };
@@ -171,11 +171,16 @@ class RectanglePresence {
         let rect = this.el.getBoundingClientRect();
         let containerRect = this.view.el.getBoundingClientRect();
 
+        let left = Math.max(rect.x, containerRect.x);
+        let top = Math.max(rect.y, containerRect.y);
+        let right = Math.min(rect.x + rect.width, containerRect.x + containerRect.width);
+        let bottom = Math.min(rect.y + rect.height, containerRect.y + containerRect.height);
+
         let margin = 10;
-        this.view.highlight.el.style.left = `${rect.x - containerRect.x - margin}px`;
-        this.view.highlight.el.style.top = `${rect.y - containerRect.y - margin}px`;
-        this.view.highlight.el.style.width = `${rect.width + 2 * margin}px`;
-        this.view.highlight.el.style.height = `${rect.height + 2 * margin}px`;
+        this.view.highlight.el.style.left = `${left - containerRect.x - margin}px`;
+        this.view.highlight.el.style.top = `${top - containerRect.y - margin}px`;
+        this.view.highlight.el.style.width = `${right - left + 2 * margin}px`;
+        this.view.highlight.el.style.height = `${bottom - top + 2 * margin}px`;
         this.view.highlight.el.style.display = "block";
 
         const presence = this;
@@ -186,7 +191,7 @@ class RectanglePresence {
 
     editOpen() {
         if (this.controller.currentEditPanel == null) {
-            new RectangleEditPanel(this);
+            new LightRayEditPanel(this);
         }
 
         setTopPanel(this.controller.currentEditPanel);
@@ -234,7 +239,7 @@ class RectanglePresence {
         this.barycenter = { x: 0, y: 0 };
         for (let p of this.transformedPoints) {
             this.barycenter.x += p.x;
-            this.barycenter.y -= p.ct;
+            this.barycenter.y += p.y;
         }
         this.barycenter.x /= this.transformedPoints.length;
         this.barycenter.y /= this.transformedPoints.length;
@@ -244,8 +249,7 @@ class RectanglePresence {
 
         this.shapeString = "M ";
         for (let p of this.transformedPoints)
-            this.shapeString += `${(p.x * this.view.zoom).toFixed(2)} ${(-p.ct * this.view.zoom).toFixed(2)} `;
-        this.shapeString += "Z";
+            this.shapeString += `${(p.x * this.view.zoom).toFixed(2)} ${(p.y * this.view.zoom).toFixed(2)} `;
         this.shape.el.setAttribute("d", this.shapeString);
 
         this.repositionLabel();
@@ -253,6 +257,7 @@ class RectanglePresence {
 
     _setColor(c) {
         this.el.style.fill = c;
+        this.el.style.stroke = c;
     }
 
     _updateColor() {
@@ -298,7 +303,7 @@ class RectanglePresence {
 }
 
 
-class Rectangle {
+class LightRay {
     constructor(obj, positionView) {
         Object.assign(this, obj);
         this.bindings = this.bindings || {};
@@ -319,7 +324,7 @@ class Rectangle {
 
         autoMarkings.push(this);
 
-        this.setPosition(this.minX, this.maxX, this.minCt, this.maxCt);
+        this.setPosition(this.startX || 0, this.startCt || 10);
 
         for (let v of views) {
             this.addToView(v);
@@ -330,7 +335,7 @@ class Rectangle {
     }
 
     static create(obj, positionView) {
-        new Rectangle(obj, positionView);
+        new LightRay(obj, positionView);
     }
 
     setLabel(label) {
@@ -338,85 +343,75 @@ class Rectangle {
         updateBinding(this, "label");
     };
 
-    setMinX(x) {
-        this.setPosition(parseFloat(x), this.maxX, this.minCt, this.maxCt);
+    setStartX(x) {
+        this.setStart(parseFloat(x), this.startCt);
     };
 
-    setMaxX(x) {
-        this.setPosition(this.minX, parseFloat(x), this.minCt, this.maxCt);
+    setStartCt(ct) {
+        this.setStart(this.startX, parseFloat(ct));
     };
 
-    setMinCt(ct) {
-        this.setPosition(this.minX, this.maxX, parseFloat(ct), this.maxCt);
+    setStartXFormatted(ct) {
+        this.setStartX(parseFloat(ct));
     };
 
-    setMaxCt(ct) {
-        this.setPosition(this.minX, this.maxX, this.minCt, parseFloat(ct));
+    setStartCtFormatted(ct) {
+        this.setStartCt(parseFloat(ct));
     };
 
-    setMinXFormatted(x) {
-        let minXIntention = parseFloat(x);
-        let maxXIntention = this.maxXIntention || this.maxX;
-        this.minXIntention = null;
-        this.maxXIntention = null;
+    updateTrajectory() {
+        this.setPosition(this.startX, this.startCt)
+    }
 
-        this.setPosition(minXIntention, maxXIntention, this.minCt, this.maxCt);
-    };
-    setMinXFormattedLive(x) {
-        this.minXIntention = parseFloat(x);
-        this.maxXIntention = this.maxXIntention || this.maxX;
-        this.setPosition(this.minXIntention, this.maxXIntention, this.minCt, this.maxCt);
-    };
+    setPosition(startX, startCt) {
+        this.startX = startX;
+        this.startCt = startCt;
 
-    setMaxXFormatted(x) {
-        let minXIntention = this.minXIntention || this.minX;
-        let maxXIntention = parseFloat(x);
-        this.minXIntention = null;
-        this.maxXIntention = null;
+        this.startXFormatted = `${this.startX.toFixed(2)} cs`;
+        this.startCtFormatted = `${this.startCt.toFixed(2)} cs`;
 
-        this.setPosition(minXIntention, maxXIntention, this.minCt, this.maxCt);
-    };
-    setMaxXFormattedLive(x) {
-        this.minXIntention = this.minXIntention || this.minX;
-        this.maxXIntention = parseFloat(x);
-        this.setPosition(this.minXIntention, this.maxXIntention, this.minCt, this.maxCt);
-    };
+        this.startPoint = new DOMPoint(this.startX, -this.startCt);
 
-    setMinCtFormatted(ct) {
-        this.setMinCt(parseFloat(ct));
-    };
+        this.points = [];//this.startPoint];
+        let currentSpeed = -1.0;
+        let currentPoint = this.startPoint;
 
-    setMaxCtFormatted(ct) {
-        this.setMaxCt(parseFloat(ct));
-    };
+        let collisionWaitDuration = 0;
+        while (collisionWaitDuration < Infinity) {
+            currentPoint = currentPoint.matrixTransform(new DOMMatrix().translateSelf(collisionWaitDuration * currentSpeed, -collisionWaitDuration));
+            this.points.push(currentPoint);
+            currentSpeed = -currentSpeed;
 
-    setPosition(minX, maxX, minCt, maxCt) {
-        this.minX = Math.min(minX, maxX);
-        this.maxX = Math.max(minX, maxX);
-        this.minCt = Math.min(minCt, maxCt);
-        this.maxCt = Math.max(minCt, maxCt);
+            collisionWaitDuration = Infinity;
+            for (let r of this.positionView.markings) {
+                if (!(r instanceof RectanglePresence))
+                    continue;
+                let transformedPoint = lorentzTransform(r.controller.positionView.globalBeta, currentPoint, this.positionView.globalBeta);
+                let collideX = r.controller.minX;
+                if (currentSpeed < 0)
+                    collideX = r.controller.maxX;
 
-        this.minXFormatted = `${(this.minXIntention ?? this.minX).toFixed(2)} cs`;
-        this.maxXFormatted = `${(this.maxXIntention ?? this.maxX).toFixed(2)} cs`;
-        this.minCtFormatted = `${(this.minCtIntention ?? this.minCt).toFixed(2)} cs`;
-        this.maxCtFormatted = `${(this.maxCtIntention ?? this.maxCt).toFixed(2)} cs`;
+                let collideTime = (collideX - transformedPoint.x) / currentSpeed - transformedPoint.y;
+                if (collideTime >= r.controller.minCt && collideTime <= r.controller.maxCt) {
+                    let backTransformed = lorentzTransform(this.positionView.globalBeta, new DOMPoint(collideX, -collideTime),
+                    r.controller.positionView.globalBeta);
 
-        this.pointTopLeft = new DOMPoint(minX, -maxCt);
-        this.pointTopRight = new DOMPoint(maxX, -maxCt);
-        this.pointBottomLeft = new DOMPoint(minX, -minCt);
-        this.pointBottomRight = new DOMPoint(maxX, -minCt);
-        this.points = [this.pointTopLeft, this.pointTopRight,
-        this.pointBottomRight, this.pointBottomLeft];
+                    let dur = -backTransformed.y + currentPoint.y;
+                    if (dur > Number.EPSILON && dur < collisionWaitDuration) {
+                        collisionWaitDuration = dur;
+                    }
+                }
+            }
+        }
 
-        updateBinding(this, "minX");
-        updateBinding(this, "maxX");
-        updateBinding(this, "minCt");
-        updateBinding(this, "maxCt");
+        collisionWaitDuration = Math.min(collisionWaitDuration, 1000);
+        this.points.push(currentPoint.matrixTransform(new DOMMatrix().translateSelf(collisionWaitDuration * currentSpeed, -collisionWaitDuration)));
 
-        updateBinding(this, "minXFormatted");
-        updateBinding(this, "maxXFormatted");
-        updateBinding(this, "minCtFormatted");
-        updateBinding(this, "maxCtFormatted");
+        updateBinding(this, "startX");
+        updateBinding(this, "startCt");
+
+        updateBinding(this, "startXFormatted");
+        updateBinding(this, "startCtFormatted");
         this._recalcPositions();
     }
 
@@ -440,7 +435,7 @@ class Rectangle {
     };
 
     addToView(view) {
-        new RectanglePresence(this, view);
+        new LightRayPresence(this, view);
     };
 
     setColor(color) {

@@ -555,6 +555,7 @@ function setDiagramHandle(handlers) {
 
 let pointAddToggleState;
 let rectangleAddToggleState;
+let lightRayAddToggleState;
 let isPanModus;
 let nextLabel = "";
 let isClearNextLabel;
@@ -646,6 +647,7 @@ function createLayout() {
     isColumnWidthFixed = false;
     pointAddToggleState = 0;
     rectangleAddToggleState = 0;
+    lightRayAddToggleState = 0;
     isClearNextLabel = false;
 
     $("#max-columns-minus").click(function (ev) {
@@ -744,7 +746,7 @@ function createLayout() {
                     let left = Math.floor(pos.x / alignX) * alignX;
 
                     Rectangle.create({
-                        type: "point", minX: left, maxX: left + 5.0,
+                        minX: left, maxX: left + 5.0,
                         minCt: -top - 20, maxCt: -top, label: takeNextLabel()
                     }, card.diagramView);
 
@@ -767,6 +769,47 @@ function createLayout() {
 
     $("#interaction-addrectangle").click(function (ev) {
         toggleAddRectangle();
+    });
+
+
+    let toggleAddLightRay = function () {
+        if (lightRayAddToggleState == 2) {
+            setDiagramHandle({});
+        } else if (lightRayAddToggleState == 1) {
+            lightRayAddToggleState = 2;
+            $("#interaction-addlightray").addClass("toggled");
+            $("#interaction-addlightray").addClass("second-stage");
+
+        } else {
+            $("#interaction-addlightray").addClass("toggled");
+
+            lightRayAddToggleState = 1;
+            setDiagramHandle({
+                click: function (event, pos, card) {
+                    let alignX = 5;
+                    let alignY = 5;
+                    let top = Math.floor(pos.y / alignY) * alignY;
+                    let left = Math.floor(pos.x / alignX) * alignX;
+
+                    LightRay.create({
+                        startX: left, startCt: -top, label: takeNextLabel()
+                    }, card.diagramView);
+
+                    if (lightRayAddToggleState == 1)
+                        setDiagramHandle({});
+                },
+                dismiss: function () {
+                    lightRayAddToggleState = 0;
+
+                    $("#interaction-addlightray").removeClass("toggled");
+                    $("#interaction-addlightray").removeClass("second-stage");
+                }
+            });
+        }
+    }
+
+    $("#interaction-addlightray").click(function (ev) {
+        toggleAddLightRay();
     });
 
     let togglePan = function () {
