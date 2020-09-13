@@ -213,10 +213,10 @@ SOFTWARE.
 			margin: 10px 5px;
 		}
 
-		.toolbar .btn-outline-info:hover {
+		/*.toolbar .btn-outline-info:hover {
 			background-color: transparent;
 			color: #0069d9;
-		}
+		}*/
 
 		/* Based on Bootstrap .btn* styles */
 		.button-action,
@@ -233,6 +233,10 @@ SOFTWARE.
 			line-height: 1.5;
 			border-radius: .25rem;
 			outline: none;
+
+			-webkit-transition: background-color 200ms ease;
+			-ms-transition: background-color 200ms ease;
+			transition: background-color 200ms ease, color 200ms ease;
 
 			-webkit-appearance: button;
 			margin: 0px;
@@ -254,7 +258,7 @@ SOFTWARE.
 		}
 
 		.button-action:hover,
-		.button-toggle:hover {
+		.button-toggle:hover:not(.toggled) {
 			/*color: #0069d9;*/
 			color: hsl(211, 100%, 25%);
 		}
@@ -717,24 +721,24 @@ SOFTWARE.
 				</div>
 
 				<div style="margin-left:0px;">
-					<button type="button" class="btn btn-outline-info" id="columns-fixwidth">Fix width</button>
+					<button type="button" class="button-toggle" id="columns-fixwidth">Fix width</button>
 				</div>
 
 				<div style="display:flex;flex-flow:row;">
 					<div>
-						<button type="button" class="btn btn-outline-info" id="interaction-addpoint"
+						<button type="button" class="button-toggle" id="interaction-addpoint"
 							style="border-top-right-radius: 0px;border-bottom-right-radius: 0px;">
 							Add point
 						</button>
 					</div>
 					<div>
-						<button type="button" class="btn btn-outline-info" id="interaction-addrectangle"
+						<button type="button" class="button-toggle" id="interaction-addrectangle"
 							style="border-radius:0px;border-left:0px;">
 							Add rectangle
 						</button>
 					</div>
 					<div>
-						<button type="button" class="btn btn-outline-info" id="interaction-pan" style="border-top-left-radius: 0px;border-bottom-left-radius: 0px;
+						<button type="button" class="button-toggle" id="interaction-pan" style="border-top-left-radius: 0px;border-bottom-left-radius: 0px;
 							border-left:0px;">
 							Pan
 						</button>
@@ -749,13 +753,13 @@ SOFTWARE.
 						<input type="text" class="form-control" id="nextlabel" style="width:10em;" />
 					</div>
 					<div>
-						<button type="button" class="btn btn-outline-info" id="nextlabel-clear">No label</button>
+						<button type="button" class="button-toggle" id="nextlabel-clear">No label</button>
 					</div>
 				</div>
 
 				<div style="margin-left:10px;">
 					<a href="LICENSE.txt" target="_blank">
-						<button type="button" class="btn btn-outline-info" id="button-openlicense">
+						<button type="button" class="button-action" id="button-openlicense">
 							Open license
 						</button>
 					</a>

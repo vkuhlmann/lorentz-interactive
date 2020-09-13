@@ -564,8 +564,9 @@ function takeNextLabel() {
 function setNextLabel(val) {
     nextLabel = val.trim();
     if (nextLabel.length > 0) {
-        $("#nextlabel-clear").addClass("btn-outline-info");
-        $("#nextlabel-clear").removeClass("btn-primary");
+        $("#nextlabel-clear").removeClass("toggled");
+        // $("#nextlabel-clear").addClass("btn-outline-info");
+        // $("#nextlabel-clear").removeClass("btn-primary");
         isClearNextLabel = false;
     }
     if (isClearNextLabel) {
@@ -651,13 +652,17 @@ function createLayout() {
     $("#columns-fixwidth").click(function (ev) {
         if (isColumnWidthFixed) {
             isColumnWidthFixed = false;
-            $("#columns-fixwidth").addClass("btn-outline-info");
-            $("#columns-fixwidth").removeClass("btn-primary");
+            $("#columns-fixwidth").removeClass("toggled");
+
+            // $("#columns-fixwidth").addClass("btn-outline-info");
+            // $("#columns-fixwidth").removeClass("btn-primary");
 
         } else {
             isColumnWidthFixed = true;
-            $("#columns-fixwidth").addClass("btn-primary");
-            $("#columns-fixwidth").removeClass("btn-outline-info");
+            $("#columns-fixwidth").addClass("toggled");
+
+            // $("#columns-fixwidth").addClass("btn-primary");
+            // $("#columns-fixwidth").removeClass("btn-outline-info");
         }
         setCardColumns(maxColumnCount, isColumnWidthFixed);
     });
@@ -668,12 +673,16 @@ function createLayout() {
 
         } else if (pointAddToggleState == 1) {
             pointAddToggleState = 2;
-            $("#interaction-addpoint").addClass("btn-success");
-            $("#interaction-addpoint").removeClass("btn-primary");
+            $("#interaction-addpoint").addClass("toggled");
+            $("#interaction-addpoint").addClass("second-stage");
+
+            // $("#interaction-addpoint").addClass("btn-success");
+            // $("#interaction-addpoint").removeClass("btn-primary");
 
         } else {
-            $("#interaction-addpoint").addClass("btn-primary");
-            $("#interaction-addpoint").removeClass("btn-outline-info");
+            // $("#interaction-addpoint").addClass("btn-primary");
+            // $("#interaction-addpoint").removeClass("btn-outline-info");
+            $("#interaction-addpoint").addClass("toggled");
 
             pointAddToggleState = 1;
             setDiagramHandle({
@@ -684,10 +693,13 @@ function createLayout() {
                 },
                 dismiss: function () {
                     pointAddToggleState = 0;
-                    $("#interaction-addpoint").addClass("btn-outline-info");
-                    $("#interaction-addpoint").removeClass("btn-primary");
-                    $("#interaction-addpoint").removeClass("btn-info");
-                    $("#interaction-addpoint").removeClass("btn-success");
+                    // $("#interaction-addpoint").addClass("btn-outline-info");
+                    // $("#interaction-addpoint").removeClass("btn-primary");
+                    // $("#interaction-addpoint").removeClass("btn-info");
+                    // $("#interaction-addpoint").removeClass("btn-success");
+
+                    $("#interaction-addpoint").removeClass("toggled");
+                    $("#interaction-addpoint").removeClass("second-stage");
                 }
             });
         }
@@ -702,12 +714,15 @@ function createLayout() {
             setDiagramHandle({});
         } else if (rectangleAddToggleState == 1) {
             rectangleAddToggleState = 2;
-            $("#interaction-addrectangle").addClass("btn-success");
-            $("#interaction-addrectangle").removeClass("btn-primary");
+            $("#interaction-addrectangle").addClass("toggled");
+            $("#interaction-addrectangle").addClass("second-stage");
+            // $("#interaction-addrectangle").addClass("btn-success");
+            // $("#interaction-addrectangle").removeClass("btn-primary");
 
         } else {
-            $("#interaction-addrectangle").addClass("btn-primary");
-            $("#interaction-addrectangle").removeClass("btn-outline-info");
+            // $("#interaction-addrectangle").addClass("btn-primary");
+            // $("#interaction-addrectangle").removeClass("btn-outline-info");
+            $("#interaction-addrectangle").addClass("toggled");
 
             rectangleAddToggleState = 1;
             setDiagramHandle({
@@ -727,10 +742,13 @@ function createLayout() {
                 },
                 dismiss: function () {
                     rectangleAddToggleState = 0;
-                    $("#interaction-addrectangle").addClass("btn-outline-info");
-                    $("#interaction-addrectangle").removeClass("btn-primary");
-                    $("#interaction-addrectangle").removeClass("btn-info");
-                    $("#interaction-addrectangle").removeClass("btn-success");
+                    // $("#interaction-addrectangle").addClass("btn-outline-info");
+                    // $("#interaction-addrectangle").removeClass("btn-primary");
+                    // $("#interaction-addrectangle").removeClass("btn-info");
+                    // $("#interaction-addrectangle").removeClass("btn-success");
+
+                    $("#interaction-addrectangle").removeClass("toggled");
+                    $("#interaction-addrectangle").removeClass("second-stage");
                 }
             });
         }
@@ -744,8 +762,9 @@ function createLayout() {
         if (isPanModus) {
             setDiagramHandle({});
         } else {
-            $("#interaction-pan").addClass("btn-primary");
-            $("#interaction-pan").removeClass("btn-outline-info");
+            // $("#interaction-pan").addClass("btn-primary");
+            // $("#interaction-pan").removeClass("btn-outline-info");
+            $("#interaction-pan").addClass("toggled");
 
             $(".pannable-diagram").css("cursor", "all-scroll");
 
@@ -788,8 +807,9 @@ function createLayout() {
                     isPanModus = false;
                     $(".pannable-diagram").css("cursor", "");
 
-                    $("#interaction-pan").addClass("btn-outline-info");
-                    $("#interaction-pan").removeClass("btn-primary");
+                    // $("#interaction-pan").addClass("btn-outline-info");
+                    // $("#interaction-pan").removeClass("btn-primary");
+                    $("#interaction-pan").removeClass("toggled");
                 }
             });
         }
@@ -813,8 +833,7 @@ function createLayout() {
         } else {
             isClearNextLabel = true;
             setNextLabel("");
-            $("#nextlabel-clear").addClass("btn-primary");
-            $("#nextlabel-clear").removeClass("btn-outline-info");
+            $("#nextlabel-clear").addClass("toggled");
         }
     });
 
