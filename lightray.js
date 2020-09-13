@@ -171,16 +171,13 @@ class LightRayPresence {
         let rect = this.el.getBoundingClientRect();
         let containerRect = this.view.el.getBoundingClientRect();
 
-        let left = Math.max(rect.x, containerRect.x);
-        let top = Math.max(rect.y, containerRect.y);
-        let right = Math.min(rect.x + rect.width, containerRect.x + containerRect.width);
-        let bottom = Math.min(rect.y + rect.height, containerRect.y + containerRect.height);
+        let intersectRect = getRectanglesIntersection(rect, containerRect);
 
         let margin = 10;
-        this.view.highlight.el.style.left = `${left - containerRect.x - margin}px`;
-        this.view.highlight.el.style.top = `${top - containerRect.y - margin}px`;
-        this.view.highlight.el.style.width = `${right - left + 2 * margin}px`;
-        this.view.highlight.el.style.height = `${bottom - top + 2 * margin}px`;
+        this.view.highlight.el.style.left = `${intersectRect.x - containerRect.x - margin}px`;
+        this.view.highlight.el.style.top = `${intersectRect.y - containerRect.y - margin}px`;
+        this.view.highlight.el.style.width = `${intersectRect.width + 2 * margin}px`;
+        this.view.highlight.el.style.height = `${intersectRect.height + 2 * margin}px`;
         this.view.highlight.el.style.display = "block";
 
         const presence = this;
