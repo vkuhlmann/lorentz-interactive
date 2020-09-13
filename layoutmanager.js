@@ -506,6 +506,11 @@ function createDiagramCard(obj = {}) {
     for (let pngEl of card.pngHolder.elements) {
         pngEl.addEventListener("contextmenu", card.updatePng);
         pngEl.addEventListener("click", card.updatePng);
+        pngEl.addEventListener("pointerover", function() {
+            card.updatePng();
+            //card.updatePng();
+            //$("[data-toggle=\"tooltip\"]", card.el).tooltip();
+        });
     }
 }
 
