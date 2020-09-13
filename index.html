@@ -310,7 +310,7 @@ SOFTWARE.
 								<path data-id="shape" d="M 0 0 h 20 v 20 h -20 z" />
 								<!--<circle cx="0" cy="0" r="1.1588" data-binding="centerpoint" fill="red" />-->
 								<text data-id="label" data-binding="label" x="2.2" y="2"
-									style="font:normal 4.9389px sans-serif;" fill="black">Element a</text>
+									style="font:normal 4.9389px sans-serif;fill:black;">Element a</text>
 							</g>
 							<g id="template-lightray">
 								<path data-id="shape" fill="none" style="stroke-width:0.8px;"
@@ -578,19 +578,22 @@ SOFTWARE.
 
 						<label>x:</label>
 						<div id="rectX" style="display:flex;flex-flow:row wrap;align-content:stretch;">
-							<input type="text" class="form-control" data-binding="minXFormatted"
-								style="flex: 1 1 100px;" />
-							<input type="text" class="form-control" data-binding="maxXFormatted"
-								style="flex: 1 1 100px;" />
+							<div style="flex: 1 1 100px;">
+								<input type="text" class="form-control" data-binding="minXFormatted" />
+							</div>
+							<div style="flex: 1 1 100px;">
+								<input type="text" class="form-control" data-binding="maxXFormatted" />
+							</div>
 						</div>
 						<label>ct:</label>
 						<div id="rectCt" style="display:flex;flex-flow:row wrap;align-content:stretch;">
-							<input type="text" class="form-control" data-binding="minCtFormatted"
-								style="flex: 1 1 100px;" />
-							<input type="text" class="form-control" data-binding="maxCtFormatted"
-								style="flex: 1 1 100px;" />
+							<div style="flex: 1 1 100px;">
+								<input type="text" class="form-control" data-binding="minCtFormatted" />
+							</div>
+							<div style="flex: 1 1 100px;">
+								<input type="text" class="form-control" data-binding="maxCtFormatted" />
+							</div>
 						</div>
-
 					</div>
 				</div>
 			</div>
@@ -635,7 +638,8 @@ SOFTWARE.
 						<input type="text" class="form-control" data-binding="label" />
 						<br />
 
-						<button type="button" data-binding="updateTrajectory" class="button-action">Recalculate trajectory</button><br/>
+						<button type="button" data-binding="updateTrajectory" class="button-action">Recalculate
+							trajectory</button><br />
 
 						<label>x, ct:</label>
 						<div id="pointXY" style="display:flex;flex-flow:row wrap;align-content:stretch;">

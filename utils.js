@@ -353,3 +353,12 @@ function updateBinding(struct, name) {
     for (let hand of struct.bindings[name])
         hand.update();//{ detail: { newValue: struct[name] } });
 }
+
+function getRectanglesIntersection(rect1, rect2) {
+    let left = Math.max(rect1.x, rect2.x);
+    let top = Math.max(rect1.y, rect2.y);
+    let right = Math.min(rect1.x + rect1.width, rect2.x + rect2.width);
+    let bottom = Math.min(rect1.y + rect1.height, rect2.y + rect2.height);
+
+    return new DOMRect(left, top, right - left, bottom - top);
+}

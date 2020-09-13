@@ -625,8 +625,8 @@ function createLayout() {
     createDiagramCard();
     createDiagramCard();
 
-    PointMarking.create({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
-    PointMarking.create({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
+    // PointMarking.create({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
+    // PointMarking.create({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
 
     new Grid(views[1]);
 
@@ -747,12 +747,12 @@ function createLayout() {
                 click: function (event, pos, card) {
                     let alignX = 5;
                     let alignY = 5;
-                    let top = Math.floor(pos.y / alignY) * alignY;
+                    let top = Math.ceil(pos.y / alignY) * alignY;
                     let left = Math.floor(pos.x / alignX) * alignX;
 
                     Rectangle.create({
                         minX: left, maxX: left + 5.0,
-                        minCt: -top - 20, maxCt: -top, label: takeNextLabel()
+                        minCt: -top, maxCt: -top + 20, label: takeNextLabel()
                     }, card.diagramView);
 
                     if (rectangleAddToggleState == 1)
@@ -797,7 +797,7 @@ function createLayout() {
                     let left = Math.floor(pos.x / alignX) * alignX;
 
                     LightRay.create({
-                        startX: left, startCt: -top, label: takeNextLabel()
+                        startX: left, startCt: -top, label: ""// takeNextLabel()
                     }, card.diagramView);
 
                     if (lightRayAddToggleState == 1)
