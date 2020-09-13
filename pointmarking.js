@@ -207,6 +207,10 @@ class PointMarkingPresence {
         //obj.x = x;
         //obj.ct = ct;
         this.el.setAttribute("transform", `translate(${this.transformedX * this.view.zoom} ${-this.transformedCt * this.view.zoom})`);
+        if (isFinite(this.transformedX))
+            this.el.style.visibility = "visible";
+        else
+            this.el.style.visibility = "hidden";
     };
 
     _setColor(c) {

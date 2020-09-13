@@ -625,8 +625,8 @@ function createLayout() {
     createDiagramCard();
     createDiagramCard();
 
-    PointMarking.create({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
-    PointMarking.create({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
+    // PointMarking.create({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
+    // PointMarking.create({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
 
     new Grid(views[1]);
 

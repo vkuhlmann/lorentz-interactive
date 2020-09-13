@@ -295,6 +295,11 @@ class RectanglePresence {
                 continue;
             m.controller.updateTrajectory();
         }
+
+        if (isFinite(this.transformedPoints[0].x))
+            this.el.style.visibility = "visible";
+        else
+            this.el.style.visibility = "hidden";
     }
 
     _setColor(c) {
