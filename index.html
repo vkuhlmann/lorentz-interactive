@@ -203,6 +203,15 @@ SOFTWARE.
 		[data-id="template-relspeed"].relspeed-active [data-id="relspeed-slider"]::-ms-fill-upper {
 			background-color: #991c1c;
 		}
+
+		.toolbar {
+			background-color: hsl(0, 0%, 98%);
+			border-radius: .5rem;
+		}
+
+		.toolbar>div {
+			margin: 10px;
+		}
 	</style>
 </head>
 
@@ -238,7 +247,7 @@ SOFTWARE.
 								<path data-id="shape" d="M 0 0 h 20 v 20 h -20 z" />
 								<!--<circle cx="0" cy="0" r="1.1588" data-binding="centerpoint" fill="red" />-->
 								<text data-id="label" data-binding="label" x="2.2" y="2"
-								style="font:normal 4.9389px sans-serif;" fill="black">Element a</text>
+									style="font:normal 4.9389px sans-serif;" fill="black">Element a</text>
 							</g>
 						</defs>
 
@@ -499,13 +508,17 @@ SOFTWARE.
 
 						<label>x:</label>
 						<div id="rectX" style="display:flex;flex-flow:row wrap;align-content:stretch;">
-							<input type="text" class="form-control" data-binding="minXFormatted" style="flex: 1 1 100px;" />
-							<input type="text" class="form-control" data-binding="maxXFormatted" style="flex: 1 1 100px;" />
+							<input type="text" class="form-control" data-binding="minXFormatted"
+								style="flex: 1 1 100px;" />
+							<input type="text" class="form-control" data-binding="maxXFormatted"
+								style="flex: 1 1 100px;" />
 						</div>
 						<label>ct:</label>
 						<div id="rectCt" style="display:flex;flex-flow:row wrap;align-content:stretch;">
-							<input type="text" class="form-control" data-binding="minCtFormatted" style="flex: 1 1 100px;" />
-							<input type="text" class="form-control" data-binding="maxCtFormatted" style="flex: 1 1 100px;" />
+							<input type="text" class="form-control" data-binding="minCtFormatted"
+								style="flex: 1 1 100px;" />
+							<input type="text" class="form-control" data-binding="maxCtFormatted"
+								style="flex: 1 1 100px;" />
 						</div>
 
 					</div>
@@ -601,25 +614,26 @@ SOFTWARE.
 				<br />
 			</div>
 
-			<nav class="navbar navbar-expand-sm bg-light navbar-light" style="margin-bottom:10px;">
-				<ul class="navbar-nav" style="overflow:auto;">
-					<!--<li class="nav-item active">
-						<a class="nav-link" href="#">Active</a>
-					</li>-->
-					<li class="nav-item">
-						<button id="addcardbutton" type="button" class="btn btn-primary">Add card</button>
-					</li>
-					<!--<li class="nav-item">
-						<input type="text"
-						class="form-control"
-						id="columns-fixed"/>
-					</li>
-					<li class="nav-item">
-						<button id="addcardbutton" type="button" class="btn btn-primary"
-						id="columns-auto">Auto</button>
-					</li>-->
+			<div style="margin-bottom:10px;display:flex;flex-flow:row wrap;justify-content:center;" id="toolbar"
+				class="toolbar">
+				<!--<div class="nav-item active">
+					<a class="nav-link" href="#">Active</a>
+				</div>-->
+				<div>
+					<button id="addcardbutton" type="button" class="btn btn-primary">Add card</button>
+				</div>
+				<!--<div class="nav-item">
+					<input type="text"
+					class="form-control"
+					id="columns-fixed"/>
+				</div>
+				<div class="nav-item">
+					<button id="addcardbutton" type="button" class="btn btn-primary"
+					id="columns-auto">Auto</button>
+				</div>-->
 
-					<li class="nav-item" style="margin-left:10px;">
+				<div style="display:flex;flex-flow:row;">
+					<div>
 						<button class="btn btn-outline-primary" id="max-columns-minus">
 							<!-- From Bootstrap Icons, used under MIT license -->
 							<svg viewBox="0 0 16 16" class="bi bi-dash buttonIcon" fill="currentColor"
@@ -628,11 +642,11 @@ SOFTWARE.
 									d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z" />
 							</svg>
 						</button>
-					</li>
-					<li class="nav-item">
+					</div>
+					<div>
 						<input type="text" class="form-control" id="max-columns" style="width:4em;" />
-					</li>
-					<li class="nav-item">
+					</div>
+					<div>
 						<button class="btn btn-outline-primary" id="max-columns-plus">
 							<!-- From Bootstrap Icons, used under MIT license -->
 							<svg viewBox="0 0 16 16" class="bi bi-plus button-Icon buttonIcon" fill="currentColor"
@@ -641,42 +655,44 @@ SOFTWARE.
 									d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
 							</svg>
 						</button>
-					</li>
+					</div>
+				</div>
 
-					<li class="nav-item" style="margin-left:10px;">
-						<button type="button" class="btn btn-outline-info" id="columns-fixwidth">Fix width</button>
-					</li>
+				<div style="margin-left:0px;">
+					<button type="button" class="btn btn-outline-info" id="columns-fixwidth">Fix width</button>
+				</div>
 
-					<li class="nav-item" style="margin-left:10px;">
-						<button type="button" class="btn btn-outline-info" id="interaction-addpoint">Add point</button>
-					</li>
-					<li class="nav-item" style="margin-left:10px;">
-						<button type="button" class="btn btn-outline-info" id="interaction-addrectangle">Add
-							rectangle</button>
-					</li>
-					<li class="nav-item">
-						<button type="button" class="btn btn-outline-info" id="interaction-pan">Pan</button>
-					</li>
+				<div>
+					<button type="button" class="btn btn-outline-info" id="interaction-addpoint">Add point</button>
+				</div>
+				<div>
+					<button type="button" class="btn btn-outline-info" id="interaction-addrectangle">Add
+						rectangle</button>
+				</div>
+				<div>
+					<button type="button" class="btn btn-outline-info" id="interaction-pan">Pan</button>
+				</div>
 
-					<li class="nav-item" style="margin-left:10px;">
-						<label for="nextlabel">Next label:&nbsp;</label>
-					</li>
-					<li class="nav-item">
+				<div style="display:flex;flex-flow:row;align-items:center;">
+					<div>
+						<label for="nextlabel" style="margin-bottom:0px;">Next label:&nbsp;</label>
+					</div>
+					<div>
 						<input type="text" class="form-control" id="nextlabel" style="width:10em;" />
-					</li>
-					<li class="nav-item">
+					</div>
+					<div>
 						<button type="button" class="btn btn-outline-info" id="nextlabel-clear">No label</button>
-					</li>
+					</div>
+				</div>
 
-					<li class="nav-item" style="margin-left:10px;">
-						<a href="LICENSE.txt" target="_blank">
-							<button type="button" class="btn btn-outline-info" id="button-openlicense">
-								Open license
-							</button>
-						</a>
-					</li>
-				</ul>
-			</nav>
+				<div style="margin-left:10px;">
+					<a href="LICENSE.txt" target="_blank">
+						<button type="button" class="btn btn-outline-info" id="button-openlicense">
+							Open license
+						</button>
+					</a>
+				</div>
+			</div>
 
 
 			<div id="cardsholder" style="display:flex;flex-flow:row wrap;justify-content:center;">
