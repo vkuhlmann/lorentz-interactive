@@ -359,6 +359,10 @@ class LightRay {
         this.setStartCt(parseFloat(ct));
     };
 
+    updateTrajectory() {
+        this.setPosition(this.startX, this.startCt)
+    }
+
     setPosition(startX, startCt) {
         this.startX = startX;
         this.startCt = startCt;
@@ -368,14 +372,40 @@ class LightRay {
 
         this.startPoint = new DOMPoint(this.startX, -this.startCt);
 
-        this.points = [this.startPoint];
-        let currentSpeed = 1.0;
+        this.points = [];//this.startPoint];
+        let currentSpeed = -1.0;
         let currentPoint = this.startPoint;
 
-        let nextCollisionTime = Infinity;
+        let collisionWaitDuration = 0;
+        while (collisionWaitDuration < Infinity) {
+            currentPoint = currentPoint.matrixTransform(new DOMMatrix().translateSelf(collisionWaitDuration * currentSpeed, -collisionWaitDuration));
+            this.points.push(currentPoint);
+            currentSpeed = -currentSpeed;
 
-        nextCollisionTime = Math.min(nextCollisionTime, 1000);
-        this.points.push(currentPoint.matrixTransform(new DOMMatrix().translateSelf(nextCollisionTime * currentSpeed, -nextCollisionTime)));
+            collisionWaitDuration = Infinity;
+            for (let r of this.positionView.markings) {
+                if (!(r instanceof RectanglePresence))
+                    continue;
+                let transformedPoint = lorentzTransform(r.controller.positionView.globalBeta, currentPoint, this.positionView.globalBeta);
+                let collideX = r.controller.minX;
+                if (currentSpeed < 0)
+                    collideX = r.controller.maxX;
+
+                let collideTime = (collideX - transformedPoint.x) / currentSpeed - transformedPoint.y;
+                if (collideTime >= r.controller.minCt && collideTime <= r.controller.maxCt) {
+                    let backTransformed = lorentzTransform(this.positionView.globalBeta, new DOMPoint(collideX, -collideTime),
+                    r.controller.positionView.globalBeta);
+
+                    let dur = -backTransformed.y + currentPoint.y;
+                    if (dur > Number.EPSILON && dur < collisionWaitDuration) {
+                        collisionWaitDuration = dur;
+                    }
+                }
+            }
+        }
+
+        collisionWaitDuration = Math.min(collisionWaitDuration, 1000);
+        this.points.push(currentPoint.matrixTransform(new DOMMatrix().translateSelf(collisionWaitDuration * currentSpeed, -collisionWaitDuration)));
 
         updateBinding(this, "startX");
         updateBinding(this, "startCt");
