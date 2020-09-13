@@ -324,14 +324,14 @@ class LightRay {
 
         autoMarkings.push(this);
 
-        this.setPosition(this.startX || 0, this.startCt || 10);
+        this.setStart(this.startX || 0, this.startCt || 10);
 
         for (let v of views) {
             this.addToView(v);
         }
         this.suppressSet = false;
 
-        //this.setPosition(this.minX, this.maxX, this.minCt, this.maxCt);
+        //this.setStart(this.minX, this.maxX, this.minCt, this.maxCt);
     }
 
     static create(obj, positionView) {
@@ -360,10 +360,10 @@ class LightRay {
     };
 
     updateTrajectory() {
-        this.setPosition(this.startX, this.startCt)
+        this.setStart(this.startX, this.startCt)
     }
 
-    setPosition(startX, startCt) {
+    setStart(startX, startCt) {
         this.startX = startX;
         this.startCt = startCt;
 

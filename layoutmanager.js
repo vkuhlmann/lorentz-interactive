@@ -486,9 +486,14 @@ function createDiagramCard(obj = {}) {
     card.producePng = function (pictureElements) {
         if (pictureElements == null || pictureElements.length == 0)
             return;
+
+        //let rect = diagramView.svgElem.el.getBoundingClientRect();
+        //let aspectRatio = rect.width / rect.height;
+        let viewBoxHeight = card.diagramView.svgElem.el.viewBox.baseVal["height"];
+
         /* Source: https://stackoverflow.com/questions/12255444/copy-svg-images-from-browser-to-clipboard */
         svgAsPngUri(card.diagramView.svgElem.el, {
-            scale: Math.ceil(1000.0 / card.diagramView.svgElem.el.getBBox().width),
+            scale: 2000.0 / viewBoxHeight, //card.diagramView.svgElem.el.getBoundingClientRect().width,
             backgroundColor: "rgba(100%, 100%, 100%, 1)", renderingOptions: 0.92
         }).then(uri => {
             for (let el of pictureElements) {
@@ -833,10 +838,12 @@ function createLayout() {
                     originalOffset = { x: card.diagramView.panOffset.x, y: card.diagramView.panOffset.y };
                     grapPoint = DOMPoint.fromPoint(pos);
                     transfMatrix = new DOMMatrix().translateSelf(-grapPoint.x, -grapPoint.y).preMultiplySelf(new DOMMatrix().scaleSelf(-1, -1));
+                    event.preventDefault();
                 },
                 pointerup: function (event, pos, card) {
                     transfMatrix = null;
                     event.target.releasePointerCapture(event.pointerID);
+                    event.preventDefault();
                 },
                 pointermove: function (event, pos, card) {
                     if (transfMatrix !== null) {
@@ -847,6 +854,7 @@ function createLayout() {
 
                         card.setPanOffset(point.x, point.y);
                     }
+                    event.preventDefault();
                 },
                 wheel: function (event, pos, card) {
                     let scrollAmount = event.deltaY;
@@ -856,6 +864,7 @@ function createLayout() {
                         scrollAmount = scrollAmount / 1000;
                     }
                     card.zoomIncrease(scrollAmount, pos);
+                    event.preventDefault();
                 },
                 dismiss: function () {
                     isPanModus = false;
