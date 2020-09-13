@@ -289,6 +289,12 @@ class RectanglePresence {
             this.shape.el.style.strokeWidth = 0;
 
         this.repositionLabel();
+
+        for (let m of this.view.markings) {
+            if (!(m instanceof LightRayPresence))
+                continue;
+            m.controller.updateTrajectory();
+        }
     }
 
     _setColor(c) {
