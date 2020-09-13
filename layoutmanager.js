@@ -544,8 +544,8 @@ function setDiagramHandle(handlers) {
     handleDiagramAvailable = handlers != null && Object.keys(handlers).length > 0;
 }
 
-let isPointAddModus;
-let isRectangleAddModus;
+let pointAddToggleState;
+let rectangleAddToggleState;
 let isPanModus;
 let nextLabel = "";
 let isClearNextLabel;
@@ -632,8 +632,8 @@ function createLayout() {
 
     maxColumnCount = null;
     isColumnWidthFixed = false;
-    isPointAddModus = false;
-    isRectangleAddModus = false;
+    pointAddToggleState = 0;
+    rectangleAddToggleState = 0;
     isClearNextLabel = false;
 
     $("#max-columns-minus").click(function (ev) {
@@ -663,22 +663,31 @@ function createLayout() {
     });
 
     let toggleAddPoint = function () {
-        if (isPointAddModus) {
+        if (pointAddToggleState == 2) {
             setDiagramHandle({});
+
+        } else if (pointAddToggleState == 1) {
+            pointAddToggleState = 2;
+            $("#interaction-addpoint").addClass("btn-success");
+            $("#interaction-addpoint").removeClass("btn-primary");
+
         } else {
             $("#interaction-addpoint").addClass("btn-primary");
             $("#interaction-addpoint").removeClass("btn-outline-info");
 
-            isPointAddModus = true;
+            pointAddToggleState = 1;
             setDiagramHandle({
                 click: function (event, pos, card) {
                     PointMarking.create({ type: "point", x: pos.x, ct: -pos.y, label: takeNextLabel() }, card.diagramView);
-                    setDiagramHandle({});
+                    if (pointAddToggleState == 1)
+                        setDiagramHandle({});
                 },
                 dismiss: function () {
-                    isPointAddModus = false;
+                    pointAddToggleState = 0;
                     $("#interaction-addpoint").addClass("btn-outline-info");
                     $("#interaction-addpoint").removeClass("btn-primary");
+                    $("#interaction-addpoint").removeClass("btn-info");
+                    $("#interaction-addpoint").removeClass("btn-success");
                 }
             });
         }
@@ -689,13 +698,18 @@ function createLayout() {
     });
 
     let toggleAddRectangle = function () {
-        if (isRectangleAddModus) {
+        if (rectangleAddToggleState == 2) {
             setDiagramHandle({});
+        } else if (rectangleAddToggleState == 1) {
+            rectangleAddToggleState = 2;
+            $("#interaction-addrectangle").addClass("btn-success");
+            $("#interaction-addrectangle").removeClass("btn-primary");
+
         } else {
             $("#interaction-addrectangle").addClass("btn-primary");
             $("#interaction-addrectangle").removeClass("btn-outline-info");
 
-            isRectangleAddModus = true;
+            rectangleAddToggleState = 1;
             setDiagramHandle({
                 click: function (event, pos, card) {
                     let alignX = 5;
@@ -707,12 +721,16 @@ function createLayout() {
                         type: "point", minX: left, maxX: left + 5.0,
                         minCt: -top - 20, maxCt: -top, label: takeNextLabel()
                     }, card.diagramView);
-                    setDiagramHandle({});
+
+                    if (rectangleAddToggleState == 1)
+                        setDiagramHandle({});
                 },
                 dismiss: function () {
-                    isRectangleAddModus = false;
+                    rectangleAddToggleState = 0;
                     $("#interaction-addrectangle").addClass("btn-outline-info");
                     $("#interaction-addrectangle").removeClass("btn-primary");
+                    $("#interaction-addrectangle").removeClass("btn-info");
+                    $("#interaction-addrectangle").removeClass("btn-success");
                 }
             });
         }

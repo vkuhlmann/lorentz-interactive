@@ -210,7 +210,65 @@ SOFTWARE.
 		}
 
 		.toolbar>div {
-			margin: 10px;
+			margin: 10px 5px;
+		}
+
+		.toolbar .btn-outline-info:hover {
+			background-color: transparent;
+			color: #0069d9;
+		}
+
+		/* Based on Bootstrap .btn* styles */
+		.button-action,
+		.button-toggle {
+			border: 1px solid #17a2b8;
+			color: #17a2b8;
+			font-weight: 400;
+			text-align: center;
+			vertical-align: middle;
+			user-select: none;
+			background-color: transparent;
+			padding: .375rem .75rem;
+			font-size: 1rem;
+			line-height: 1.5;
+			border-radius: .25rem;
+			outline: none;
+
+			-webkit-appearance: button;
+			margin: 0px;
+		}
+
+		.button-action:focus,
+		.button-toggle:focus {
+			outline: 0 none black;
+		}
+
+		.button-action::-moz-focus-inner,
+		.button-toggle::-moz-focus-inner {
+			border: 0;
+		}
+
+		.button-action:not(:disabled):not(.disabled),
+		.button-toggle:not(:disabled):not(.disabled) {
+			cursor: pointer;
+		}
+
+		.button-action:hover,
+		.button-toggle:hover {
+			/*color: #0069d9;*/
+			color: hsl(211, 100%, 25%);
+		}
+
+		.button-toggle.toggled {
+			background-color: #0069d9;
+			color: #fff;
+			border-color: #0062cc;
+		}
+
+		.button-toggle.toggled.second-stage {
+			background-color: #218838;
+			color: #fff;
+			border-color: #218838;
 		}
 	</style>
 </head>
@@ -620,7 +678,7 @@ SOFTWARE.
 					<a class="nav-link" href="#">Active</a>
 				</div>-->
 				<div>
-					<button id="addcardbutton" type="button" class="btn btn-primary">Add card</button>
+					<button id="addcardbutton" type="button" class="button-action">Add card</button>
 				</div>
 				<!--<div class="nav-item">
 					<input type="text"
@@ -632,9 +690,9 @@ SOFTWARE.
 					id="columns-auto">Auto</button>
 				</div>-->
 
-				<div style="display:flex;flex-flow:row;">
+				<div style="display:flex;flex-flow:row;margin-right:0px;">
 					<div>
-						<button class="btn btn-outline-primary" id="max-columns-minus">
+						<button class="button-action" id="max-columns-minus">
 							<!-- From Bootstrap Icons, used under MIT license -->
 							<svg viewBox="0 0 16 16" class="bi bi-dash buttonIcon" fill="currentColor"
 								xmlns="http://www.w3.org/2000/svg">
@@ -647,7 +705,7 @@ SOFTWARE.
 						<input type="text" class="form-control" id="max-columns" style="width:4em;" />
 					</div>
 					<div>
-						<button class="btn btn-outline-primary" id="max-columns-plus">
+						<button class="button-action" id="max-columns-plus">
 							<!-- From Bootstrap Icons, used under MIT license -->
 							<svg viewBox="0 0 16 16" class="bi bi-plus button-Icon buttonIcon" fill="currentColor"
 								xmlns="http://www.w3.org/2000/svg">
@@ -662,15 +720,25 @@ SOFTWARE.
 					<button type="button" class="btn btn-outline-info" id="columns-fixwidth">Fix width</button>
 				</div>
 
-				<div>
-					<button type="button" class="btn btn-outline-info" id="interaction-addpoint">Add point</button>
-				</div>
-				<div>
-					<button type="button" class="btn btn-outline-info" id="interaction-addrectangle">Add
-						rectangle</button>
-				</div>
-				<div>
-					<button type="button" class="btn btn-outline-info" id="interaction-pan">Pan</button>
+				<div style="display:flex;flex-flow:row;">
+					<div>
+						<button type="button" class="btn btn-outline-info" id="interaction-addpoint"
+							style="border-top-right-radius: 0px;border-bottom-right-radius: 0px;">
+							Add point
+						</button>
+					</div>
+					<div>
+						<button type="button" class="btn btn-outline-info" id="interaction-addrectangle"
+							style="border-radius:0px;border-left:0px;">
+							Add rectangle
+						</button>
+					</div>
+					<div>
+						<button type="button" class="btn btn-outline-info" id="interaction-pan" style="border-top-left-radius: 0px;border-bottom-left-radius: 0px;
+							border-left:0px;">
+							Pan
+						</button>
+					</div>
 				</div>
 
 				<div style="display:flex;flex-flow:row;align-items:center;">
