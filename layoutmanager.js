@@ -529,7 +529,7 @@ function setCardColumns(colCount, fixWidth = false) {
 
     if (maxColumnCount == null) {
         changeStylesheetRule(document.styleSheets[document.styleSheets.length - 1], selector, "flex", "1 1 300px");
-        changeStylesheetRule(document.styleSheets[document.styleSheets.length - 1], selector, "max-width", "500px");
+        changeStylesheetRule(document.styleSheets[document.styleSheets.length - 1], selector, "max-width", "700px");
         //$("#columns-fixed")[0].value = "";
         $("#max-columns")[0].value = "";
     } else {
