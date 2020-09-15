@@ -618,6 +618,12 @@ function getNextColor() {
     return c;
 }
 
+let theGrid;
+
+function setGridRotation(degrees) {
+    theGrid.matrix = new DOMMatrix().scaleSelf(10, 10).rotateSelf(degrees);
+}
+
 function createLayout() {
     nextColorIndex = 0;
     nextPerspectiveNumber = 1;
@@ -628,7 +634,7 @@ function createLayout() {
     // PointMarking.create({ type: "point", x: 10, ct: 30, label: "Cool!" }, views[0]);
     // PointMarking.create({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
 
-    new Grid(views[1]);
+    theGrid = new Grid(views[1]);
 
     // setInterval(() => {
     //     let rect = views[0].coordinatePlaced.getCurrentViewBounds();
