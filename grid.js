@@ -31,6 +31,7 @@ class GridPresence {
         this.isVisible = false;
         this.spacingFactor = 1;
         this.majorInterval = null;
+        this.canonicalZoom = 1.0;
 
         let grids = $("[data-id=grids]", this.view.el)[0];
         this.el = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -43,8 +44,9 @@ class GridPresence {
         this.setVisible(true);
     }
 
-    setSpacingFactor(factor) {
+    setSpacingFactor(factor, canonicalZoom) {
         this.spacingFactor = factor;
+        this.canonicalZoom = canonicalZoom;
         this.recreate();
     }
 
@@ -129,21 +131,29 @@ class GridPresence {
 
         Object.assign(p.style, style);
 
+        let strokeWidth = (style.relativeWidth || 1) * (style["stroke-width"] || 0.1);
+        p.style.strokeWidth = strokeWidth;
+
         let dashes = data.dashes || [1, 1.5];
+        let dashScale = data.staticDashScale || 1.0;
+
+        if (data.dynamicDashScale == null)
+            dashScale *= this.view.zoom / this.canonicalZoom;
+        else
+            dashScale *= data.dynamicDashScale;
+
         let dashesString = "";
         for (let dash of dashes)
-            dashesString += `${dash}px `;
+            dashesString += `${dash * dashScale}px `;
         dashesString = dashesString.trim();
 
         p.style.strokeDasharray = dashesString;
 
         let dashPatternLength = 0;
         for (let dash of dashes)
-            dashPatternLength += dash;
+            dashPatternLength += dash * dashScale;
         let dashOffset = (posStart.x + posStart.y) % dashPatternLength;
         p.style.strokeDashoffset = `${dashOffset}px`;
-
-        p.style.strokeWidth = (style.relativeWidth || 1) * (style["stroke-width"] || 0.1);
 
         // if (i == 999)
         //     p.style.stroke = "red";
@@ -164,9 +174,10 @@ class GridPresence {
         return this.addFiniteLine(posStart, posEnd, style, data);
     }
 
-    getLineStyle(pos) {
+    getLineStyle(pos, style) {
         let obj = {};
         Object.assign(obj, this.grid.gridLineStyle);
+        Object.assign(obj, style);
         obj.relativeWidth = 1.0;
         if ((pos % (this.majorInterval || this.grid.majorInterval)) == 0) {
             obj.relativeWidth = 3;
@@ -203,6 +214,8 @@ class GridPresence {
         if (flipDirX)
             dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
 
+        let dirXLength = Math.sqrt(dirX.x * dirX.x + dirX.y * dirX.y);
+
         logicalStartPoint = lorentzTransform(otherView.globalBeta, logicalStartPoint, thisView.globalBeta);
         logicalStartPoint = logicalStartPoint.matrixTransform(transf.inverse());
         let logicalStartX = Math.floor(logicalStartPoint.x);
@@ -217,9 +230,11 @@ class GridPresence {
             let boundTopLeft = new DOMPoint(boundRect.x, boundRect.y).matrixTransform(placingTransf);
             let boundWidthHeight = new DOMPoint(boundRect.width, boundRect.height, 0.0, 0.0).matrixTransform(placingTransf);
 
+            let style = {};
+
             let res = this.addInfiniteLine(basePoint.matrixTransform(placingTransf), dirY.matrixTransform(placingTransf),
                 new DOMRect(boundTopLeft.x, boundTopLeft.y, boundWidthHeight.x, boundWidthHeight.y),
-                this.getLineStyle(logicalStartX + i * (flipDirX ? -1 : 1)), {});
+                this.getLineStyle(logicalStartX + i * (flipDirX ? -1 : 1), style), {});
             if (res === null) {
                 if (i < 1)
                     continue;
@@ -269,14 +284,14 @@ class Grid {
         this.updateMatrix();
     }
 
-    setViewSpacing(spacing, view) {
+    setViewSpacing(spacing, canonicalZoom, view) {
         if (view == null)
             return;
         for (let pres of this.presences) {
             if (pres.view !== view)
                 continue;
 
-            pres.setSpacingFactor(spacing);
+            pres.setSpacingFactor(spacing, canonicalZoom);
             break;
         }
     }

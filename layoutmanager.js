@@ -345,7 +345,8 @@ function createDiagramCard(obj = {}) {
 
         if (theGrid != null) {
             let spacingLevel = Math.ceil(-Math.log(card.diagramView.zoom * 5 / 2) / Math.log(theGrid.majorInterval))
-            theGrid.setViewSpacing(Math.pow(theGrid.majorInterval, spacingLevel), card.diagramView);
+            let canonicalZoom = Math.pow(theGrid.majorInterval, -spacingLevel);
+            theGrid.setViewSpacing(Math.pow(theGrid.majorInterval, spacingLevel), canonicalZoom, card.diagramView);
         }
     }
 
