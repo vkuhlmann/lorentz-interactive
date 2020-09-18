@@ -391,7 +391,7 @@ class LightRay {
                 let collideTime = (collideX - transformedPoint.x) / currentSpeed - transformedPoint.y;
                 if (collideTime >= r.controller.minCt && collideTime <= r.controller.maxCt) {
                     let backTransformed = lorentzTransform(this.positionView.globalBeta, new DOMPoint(collideX, -collideTime),
-                    r.controller.positionView.globalBeta);
+                        r.controller.positionView.globalBeta);
 
                     let dur = -backTransformed.y + currentPoint.y;
                     if (dur > Number.EPSILON && dur < collisionWaitDuration) {

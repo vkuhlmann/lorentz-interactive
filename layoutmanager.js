@@ -342,6 +342,12 @@ function createDiagramCard(obj = {}) {
 
         card.diagramView.zoom = newZoom;
         card.updatePositioning();
+
+        if (theGrid != null) {
+            let spacingLevel = Math.ceil(-Math.log(card.diagramView.zoom * 5 / 2) / Math.log(theGrid.majorInterval))
+            let canonicalZoom = Math.pow(theGrid.majorInterval, -spacingLevel);
+            theGrid.setViewSpacing(Math.pow(theGrid.majorInterval, spacingLevel), canonicalZoom, card.diagramView);
+        }
     }
 
     card.zoomIncrease = function (frac = 0.1, origin = null) {
@@ -511,7 +517,7 @@ function createDiagramCard(obj = {}) {
     for (let pngEl of card.pngHolder.elements) {
         pngEl.addEventListener("contextmenu", card.updatePng);
         pngEl.addEventListener("click", card.updatePng);
-        pngEl.addEventListener("pointerover", function() {
+        pngEl.addEventListener("pointerover", function () {
             card.updatePng();
             //card.updatePng();
             //$("[data-toggle=\"tooltip\"]", card.el).tooltip();
@@ -619,9 +625,37 @@ function getNextColor() {
 }
 
 let theGrid;
+let currentGridType;
 
 function setGridRotation(degrees) {
     theGrid.matrix = new DOMMatrix().scaleSelf(10, 10).rotateSelf(degrees);
+}
+
+function setGridType(type) {
+    let gridTypeSelectedEl = $("#gridTypeSelected")[0];
+
+    if (type === 1) {
+        theGrid.setRotation(0);
+        theGrid.setVisible(true, true);
+
+        if (gridTypeSelectedEl != null)
+            gridTypeSelectedEl.innerHTML = "Grid 1";
+
+    } else if (type === 2) {
+        theGrid.setRotation(45);
+        theGrid.setVisible(true, true);
+
+        if (gridTypeSelectedEl != null)
+            gridTypeSelectedEl.innerHTML = "Grid 2";
+
+    } else {
+        theGrid.setVisible(false, false);
+
+        if (gridTypeSelectedEl != null)
+            gridTypeSelectedEl.innerHTML = "Grid 0";
+    }
+
+    currentGridType = type;
 }
 
 function createLayout() {
@@ -635,6 +669,18 @@ function createLayout() {
     // PointMarking.create({ type: "point", x: -10, ct: 30, label: "Super cool!" }, views[1]);
 
     theGrid = new Grid(views[1]);
+
+    $("#selectGrid0").click(function () {
+        setGridType(0);
+    });
+    $("#selectGrid1").click(function () {
+        setGridType(1);
+    });
+
+    $("#selectGrid2").click(function () {
+        setGridType(2);
+    });
+
 
     // setInterval(() => {
     //     let rect = views[0].coordinatePlaced.getCurrentViewBounds();
