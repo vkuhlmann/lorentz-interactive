@@ -149,10 +149,15 @@ class GridPresence {
 
         p.style.strokeDasharray = dashesString;
 
+        let diff = new DOMPoint(posEnd.x - posStart.x, posEnd.y - posStart.y, 0.0, 0.0);
+        let lineLength = Math.sqrt(diff.x * diff.x + diff.y * diff.y);
+        let direction = new DOMPoint(diff.x / lineLength, diff.y / lineLength);
+
         let dashPatternLength = 0;
         for (let dash of dashes)
             dashPatternLength += dash * dashScale;
-        let dashOffset = (posStart.x + posStart.y) % dashPatternLength;
+        let dashOffset = (direction.x * posStart.x + direction.y * posStart.y) % dashPatternLength;
+        //let dashOffset = (posStart.x + posStart.y) % dashPatternLength;
         p.style.strokeDashoffset = `${dashOffset}px`;
 
         // if (i == 999)
