@@ -1,7 +1,7 @@
 This is the license file accompanying the code used in
 https://github.com/vkuhlmann/lorentz-interactive
 
-It also includes acknowledgements, which are provided purely informational.
+It also includes acknowledgements, which are provided purely for informational purposes.
 
 ====================
   Acknowledgements
