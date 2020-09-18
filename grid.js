@@ -30,6 +30,7 @@ class GridPresence {
         this.keepInvisible = false;
         this.isVisible = false;
         this.spacingFactor = 1;
+        this.majorInterval = null;
 
         let grids = $("[data-id=grids]", this.view.el)[0];
         this.el = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -126,7 +127,7 @@ class GridPresence {
         let p = document.createElementNS("http://www.w3.org/2000/svg", "path");
         p.setAttribute("d", `M ${posStart.x} ${posStart.y} ${posEnd.x} ${posEnd.y}`);
 
-        p.style.strokeWidth = 0.1;
+        Object.assign(p.style, style);
 
         let dashes = data.dashes || [1, 1.5];
         let dashesString = "";
@@ -142,7 +143,7 @@ class GridPresence {
         let dashOffset = (posStart.x + posStart.y) % dashPatternLength;
         p.style.strokeDashoffset = `${dashOffset}px`;
 
-        Object.assign(p.style, style);
+        p.style.strokeWidth = (style.relativeWidth || 1) * (style["stroke-width"] || 0.1);
 
         // if (i == 999)
         //     p.style.stroke = "red";
@@ -164,7 +165,14 @@ class GridPresence {
     }
 
     getLineStyle(pos) {
-        return this.grid.gridLineStyle;
+        let obj = {};
+        Object.assign(obj, this.grid.gridLineStyle);
+        obj.relativeWidth = 1.0;
+        if ((pos % (this.majorInterval || this.grid.majorInterval)) == 0) {
+            obj.relativeWidth = 3;
+            obj["stroke"] = "red";
+        }
+        return obj;
     }
 
     placeSeries(transf) {
@@ -190,7 +198,7 @@ class GridPresence {
         let orthDir = new DOMPoint(dirX.x - parComp * dirY.x, dirX.y - parComp * dirY.y);
 
         let flipDirX = (logicalStartPoint.x - (boundRect.x + boundRect.width / 2)) * orthDir.x +
-        (logicalStartPoint.y - (boundRect.y + boundRect.height / 2)) * orthDir.y > 0;
+            (logicalStartPoint.y - (boundRect.y + boundRect.height / 2)) * orthDir.y > 0;
 
         if (flipDirX)
             dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
@@ -232,10 +240,11 @@ class Grid {
         this.gridLineStyle = {};
         this.rotation = 0;
         this.spacing = 10;
+        this.majorInterval = 5;
 
-        // this.gridLineStyle["stroke-width"] = 0.1;
+        this.gridLineStyle["stroke-width"] = 0.1;
         // this.gridLineStyle.dashes = [1, 1.5];
-        this.gridLineStyle["stroke"] = "red";
+        // this.gridLineStyle["stroke"] = "red";
 
         autoGrids.push(this);
         for (let v of views) {
