@@ -24,7 +24,7 @@ function bindInput(el, context, targetName, listeners, applyListeners = true) {
     if (typeof (context[targetName]) != "string" && isNaN(context[targetName]))
         return false;
 
-    let suppressState = {suppressWhenLive: true, suppress: false};
+    let suppressState = { suppressWhenLive: true, suppress: false };
 
     el.value = context[targetName];
     if (context.bindings != null) {
