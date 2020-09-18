@@ -343,9 +343,9 @@ function createDiagramCard(obj = {}) {
         card.diagramView.zoom = newZoom;
         card.updatePositioning();
 
-        let spacingLevel = Math.ceil(-Math.log(card.diagramView.zoom * 5/3) / Math.log(5))
+        let spacingLevel = Math.ceil(-Math.log(card.diagramView.zoom * 5/2) / Math.log(10))
         if (theGrid != null)
-            theGrid.setViewSpacing(10 * Math.pow(5, spacingLevel), card.view);
+            theGrid.setViewSpacing(Math.pow(10, spacingLevel), card.diagramView);
     }
 
     card.zoomIncrease = function (frac = 0.1, origin = null) {

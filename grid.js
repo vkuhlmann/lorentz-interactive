@@ -163,6 +163,10 @@ class GridPresence {
         return this.addFiniteLine(posStart, posEnd, style, data);
     }
 
+    getLineStyle(pos) {
+        return this.grid.gridLineStyle;
+    }
+
     placeSeries(transf) {
         let boundRect = this.view.coordinatePlaced.getCurrentViewBounds();
 
@@ -185,8 +189,10 @@ class GridPresence {
         let parComp = dirX.x * dirY.x + dirX.y * dirY.y;
         let orthDir = new DOMPoint(dirX.x - parComp * dirY.x, dirX.y - parComp * dirY.y);
 
-        if ((logicalStartPoint.x - (boundRect.x + boundRect.width / 2)) * orthDir.x +
-            (logicalStartPoint.y - (boundRect.y + boundRect.height / 2)) * orthDir.y > 0)
+        let flipDirX = (logicalStartPoint.x - (boundRect.x + boundRect.width / 2)) * orthDir.x +
+        (logicalStartPoint.y - (boundRect.y + boundRect.height / 2)) * orthDir.y > 0;
+
+        if (flipDirX)
             dirX = dirX.matrixTransform(new DOMMatrix().scale(-1, -1));
 
         logicalStartPoint = lorentzTransform(otherView.globalBeta, logicalStartPoint, thisView.globalBeta);
@@ -205,7 +211,7 @@ class GridPresence {
 
             let res = this.addInfiniteLine(basePoint.matrixTransform(placingTransf), dirY.matrixTransform(placingTransf),
                 new DOMRect(boundTopLeft.x, boundTopLeft.y, boundWidthHeight.x, boundWidthHeight.y),
-                this.grid.gridLineStyle, {});
+                this.getLineStyle(logicalStartX + i * (flipDirX ? -1 : 1)), {});
             if (res === null) {
                 if (i < 1)
                     continue;
