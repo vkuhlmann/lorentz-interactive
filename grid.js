@@ -29,6 +29,7 @@ class GridPresence {
         this.view.grids.push(this);
         this.keepInvisible = false;
         this.isVisible = false;
+        this.spacingFactor = 1;
 
         let grids = $("[data-id=grids]", this.view.el)[0];
         this.el = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -39,6 +40,11 @@ class GridPresence {
             gridPresence.recreate();
         });
         this.setVisible(true);
+    }
+
+    setSpacingFactor(factor) {
+        this.spacingFactor = factor;
+        this.recreate();
     }
 
     updateVisibility() {
@@ -74,10 +80,12 @@ class GridPresence {
         while (this.el.hasChildNodes())
             this.el.removeChild(this.el.childNodes[0]);
 
-        if (!this.isVisible && !this.keepInvisible)
+        if (!this.isVisible && !this.keepInvisible && !force)
             return;
-        this.placeSeries(this.grid.matrix)
-        this.placeSeries(this.grid.matrix.rotate(0, 0, -90));
+        let transf = this.grid.matrix.scale(this.spacingFactor, this.spacingFactor);
+
+        this.placeSeries(transf)
+        this.placeSeries(transf.rotate(0, 0, -90));
     }
 
     cropInfiniteToBounds(basePoint, dir, bounds) {
@@ -216,6 +224,8 @@ class Grid {
         this.isVisible = true;
         this.overrideMainVisible = true;
         this.gridLineStyle = {};
+        this.rotation = 0;
+        this.spacing = 10;
 
         // this.gridLineStyle["stroke-width"] = 0.1;
         // this.gridLineStyle.dashes = [1, 1.5];
@@ -227,10 +237,44 @@ class Grid {
         }
     }
 
+    updateMatrix() {
+        this.setMatrix(new DOMMatrix().rotateSelf(this.rotation)
+            .scaleSelf(this.spacing, this.spacing));
+    }
+
+    setMatrix(mat) {
+        this.matrix = DOMMatrix.fromMatrix(mat);
+        for (let pres of this.presences) {
+            pres.recreate();
+        }
+    }
+
+    setGlobalSpacing() {
+        this.spacing = spacing;
+        this.updateMatrix();
+    }
+
+    setViewSpacing(spacing, view) {
+        if (view == null)
+            return;
+        for (let pres of this.presences) {
+            if (pres.view !== view)
+                continue;
+
+            pres.setSpacingFactor(spacing);
+            break;
+        }
+    }
+
+    setRotation(rot) {
+        this.rotation = rot;
+        this.updateMatrix();
+    }
+
     setVisible(val = true, mainVisible = true) {
         this.isVisible = val;
         this.overrideMainVisible = mainVisible;
-        for (let pres of presences) {
+        for (let pres of this.presences) {
             pres.updateVisibility();
         }
     }
