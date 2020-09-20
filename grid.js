@@ -284,7 +284,7 @@ class Grid {
         }
     }
 
-    setGlobalSpacing() {
+    setGlobalSpacing(spacing) {
         this.spacing = spacing;
         this.updateMatrix();
     }

@@ -640,6 +640,7 @@ function setGridType(type) {
 
     if (type === 1) {
         theGrid.setRotation(0);
+        theGrid.setGlobalSpacing(10);
         theGrid.setVisible(true, true);
 
         if (gridTypeSelectedEl != null)
@@ -647,6 +648,7 @@ function setGridType(type) {
 
     } else if (type === 2) {
         theGrid.setRotation(45);
+        theGrid.setGlobalSpacing(10 / Math.sqrt(2));
         theGrid.setVisible(true, true);
 
         if (gridTypeSelectedEl != null)
