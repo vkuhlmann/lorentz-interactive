@@ -59,6 +59,10 @@ function activateTemplateInstance(el) {
     el.classList.remove("template-staging");
 }
 
+function formatSpaceUnit(u) {
+    return `${u.toFixed(2)} s \u22C5 c`;
+}
+
 let cards = [];
 
 function createDiagramCard(obj = {}) {

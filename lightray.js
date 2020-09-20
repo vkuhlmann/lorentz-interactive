@@ -364,8 +364,8 @@ class LightRay {
         this.startX = startX;
         this.startCt = startCt;
 
-        this.startXFormatted = `${this.startX.toFixed(2)} cs`;
-        this.startCtFormatted = `${this.startCt.toFixed(2)} cs`;
+        this.startXFormatted = formatSpaceUnit(this.startX); //`${this.startX.toFixed(2)} cs`;
+        this.startCtFormatted = formatSpaceUnit(this.startCt); //`${this.startCt.toFixed(2)} cs`;
 
         this.startPoint = new DOMPoint(this.startX, -this.startCt);
 
