@@ -196,8 +196,8 @@ class PointMarkingPresence {
         this.transformedX = x;
         this.transformedCt = ct;
 
-        this.transformedXFormatted = `${this.transformedX.toFixed(2)} cs`;
-        this.transformedCtFormatted = `${this.transformedCt.toFixed(2)} s`;
+        this.transformedXFormatted = formatSpaceUnit(this.transformedX);// `${this.transformedX.toFixed(2)} cs`;
+        this.transformedCtFormatted = formatSpaceUnit(this.transformedCt); //`${this.transformedCt.toFixed(2)} s`;
         updateBinding(this, "transformedXFormatted");
         updateBinding(this, "transformedCtFormatted");
 

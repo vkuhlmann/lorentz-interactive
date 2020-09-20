@@ -407,6 +407,8 @@ class Rectangle {
     };
 
     setMinXFormatted(x) {
+        //let parsed = parseFloat(x);
+
         let minXIntention = parseFloat(x);
         let maxXIntention = this.maxXIntention || this.maxX;
         this.minXIntention = null;
@@ -476,10 +478,15 @@ class Rectangle {
         this.minCt = Math.min(minCt, maxCt);
         this.maxCt = Math.max(minCt, maxCt);
 
-        this.minXFormatted = `${(this.minXIntention ?? this.minX).toFixed(2)} cs`;
-        this.maxXFormatted = `${(this.maxXIntention ?? this.maxX).toFixed(2)} cs`;
-        this.minCtFormatted = `${(this.minCtIntention ?? this.minCt).toFixed(2)} cs`;
-        this.maxCtFormatted = `${(this.maxCtIntention ?? this.maxCt).toFixed(2)} cs`;
+        // this.minXFormatted = `${(this.minXIntention ?? this.minX).toFixed(2)} cs`;
+        // this.maxXFormatted = `${(this.maxXIntention ?? this.maxX).toFixed(2)} cs`;
+        // this.minCtFormatted = `${(this.minCtIntention ?? this.minCt).toFixed(2)} cs`;
+        // this.maxCtFormatted = `${(this.maxCtIntention ?? this.maxCt).toFixed(2)} cs`;
+
+        this.minXFormatted = formatSpaceUnit(this.minXIntention ?? this.minX);
+        this.maxXFormatted = formatSpaceUnit(this.maxXIntention ?? this.maxX);
+        this.minCtFormatted = formatSpaceUnit(this.minCtIntention ?? this.minCt);
+        this.maxCtFormatted = formatSpaceUnit(this.maxCtIntention ?? this.maxCt);
 
         this.pointTopLeft = new DOMPoint(this.minX, -this.maxCt);
         this.pointTopRight = new DOMPoint(this.maxX, -this.maxCt);
