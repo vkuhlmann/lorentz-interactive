@@ -337,7 +337,7 @@ function createDiagramCard(obj = {}) {
     card.setZoom = function (value = 1.0, origin = null) {
         if (origin == null)
             origin = { x: 0, y: 0 };
-        let newZoom = Math.max(value, 1e-1);
+        let newZoom = Math.max(value, 1e-4);
 
         let xMargin = origin.x * card.diagramView.zoom - card.diagramView.panOffset.x;
         let yMargin = origin.y * card.diagramView.zoom - card.diagramView.panOffset.y;
@@ -348,18 +348,21 @@ function createDiagramCard(obj = {}) {
         card.updatePositioning();
 
         if (theGrid != null) {
-            let spacingLevel = Math.ceil(-Math.log(card.diagramView.zoom * 5 / 2) / Math.log(theGrid.majorInterval))
+            let spacingLevel = Math.ceil(-Math.log(card.diagramView.zoom * 5 / 2) / Math.log(theGrid.majorInterval));
+
             let canonicalZoom = Math.pow(theGrid.majorInterval, -spacingLevel);
-            theGrid.setViewSpacing(Math.pow(theGrid.majorInterval, spacingLevel), canonicalZoom, card.diagramView);
+            let isMinorVisible = newZoom / canonicalZoom >= 1.0;
+
+            theGrid.setViewSpacing(Math.pow(theGrid.majorInterval, spacingLevel), canonicalZoom, isMinorVisible, card.diagramView);
         }
     }
 
-    card.zoomIncrease = function (frac = 0.1, origin = null) {
-        this.setZoom(card.diagramView.zoom + frac, origin);
+    card.zoomIncrease = function (fraction = 0.1, origin = null) {
+        this.setZoom(card.diagramView.zoom * (1 + fraction), origin);
     }
 
-    card.zoomDecrease = function (frac = 0.1, origin = null) {
-        this.setZoom(card.diagramView.zoom - frac, origin);
+    card.zoomDecrease = function (fraction = 0.1, origin = null) {
+        this.setZoom(card.diagramView.zoom * (1 - fraction), origin);
     }
 
     card.setPanOffset = function (x, y) {
@@ -640,7 +643,7 @@ function setGridType(type) {
 
     if (type === 1) {
         theGrid.setRotation(0);
-        theGrid.setGlobalSpacing(10);
+        theGrid.setGlobalSpacing(theGrid.defaultSpacing);
         theGrid.setVisible(true, true);
 
         if (gridTypeSelectedEl != null)
@@ -648,7 +651,7 @@ function setGridType(type) {
 
     } else if (type === 2) {
         theGrid.setRotation(45);
-        theGrid.setGlobalSpacing(10 / Math.sqrt(2));
+        theGrid.setGlobalSpacing(theGrid.defaultSpacing / Math.sqrt(2));
         theGrid.setVisible(true, true);
 
         if (gridTypeSelectedEl != null)

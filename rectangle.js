@@ -407,6 +407,8 @@ class Rectangle {
     };
 
     setMinXFormatted(x) {
+        //let parsed = parseFloat(x);
+
         let minXIntention = parseFloat(x);
         let maxXIntention = this.maxXIntention || this.maxX;
         this.minXIntention = null;
