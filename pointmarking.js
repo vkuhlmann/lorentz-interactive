@@ -244,6 +244,8 @@ class PointMarkingPresence {
         if (this.editPanel == null) {
             let presence = this;
 
+            this.controller.currentEditPanel?.close();
+
             if (this.editPanel == null) {
                 this.editPanel = new PointMarkingEditPanel(this);
             }
