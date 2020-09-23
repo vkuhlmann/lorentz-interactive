@@ -25,10 +25,6 @@ function hoverPointEdit(presence) {
     presence.editHover();
 }
 
-function openPointEdit(presence, closeOnOtherOpen = false) {
-
-}
-
 class PointMarkingEditPanel extends Panel {
     constructor(presence) {
         super($("#pointEditPanel")[0], presence.view);
@@ -126,6 +122,7 @@ class PointMarkingPresence {
         this.controller = controller;
         this.bindings = {};
         this.isPinned = false;
+        this.editPanel = null;
 
         this.view.markings.push(this);
         this.controller.presences.push(this);
@@ -151,7 +148,82 @@ class PointMarkingPresence {
         activateTemplateInstance(el);
     };
 
+    startMove(event = undefined, pos = undefined, card = undefined) {
+        let presence = this;
+
+        let capturepointerId = null;
+
+        let pointerdownFunction = function (event, pos, card) {
+            event.target.setPointerCapture(event.pointerId);
+            capturepointerId = event.pointerId;
+            document.body.style.cursor = "all-scroll";
+
+            // originalOffset = { x: card.diagramView.panOffset.x, y: card.diagramView.panOffset.y };
+            // grapPoint = DOMPoint.fromPoint(pos);
+            // transfMatrix = new DOMMatrix().translateSelf(-grapPoint.x, -grapPoint.y).preMultiplySelf(new DOMMatrix().scaleSelf(-1, -1));
+            event.preventDefault();
+        };
+
+        this.isMoveHandling = false;
+        this.autoDismissOnUp = true;
+
+        setDiagramHandle({
+            pointerdown: pointerdownFunction,
+
+            pointerup: function (event, pos, card) {
+                //transfMatrix = null;
+
+                if (capturepointerId === event.pointerId) {
+                    document.body.style.cursor = "auto";
+                    event.target.releasePointerCapture(capturepointerId);
+                    capturepointerId = null;
+                }
+                event.preventDefault();
+
+                if (presence.autoDismissOnUp) {
+                    setDiagramHandle({});
+                }
+            },
+            pointermove: function (event, pos, card) {
+                if (event.pointerId !== capturepointerId)
+                    return;
+
+                if (presence.controller.positionView !== presence.view)
+                    presence.rebaseTo();
+                presence.controller.setX(pos.x);
+                presence.controller.setCt(-pos.y);
+                presence.updateHighlight();
+
+                if (presence.editPanel != null) {
+                    presence.editPanel.close();
+                }
+
+                event.preventDefault();
+            },
+            dismiss: function () {
+                if (capturepointerId != null) {
+                    document.body.style.cursor = "auto";
+                    event.target.releasePointerCapture(capturepointerId);
+                    capturepointerId = null;
+                }
+
+                presence.isMoveHandling = false;
+
+                isPanModus = false;
+                $(".pannable-diagram").css("cursor", "");
+            }
+        });
+        presence.isMoveHandling = true;
+
+        if (event != null)
+            pointerdownFunction(event, pos, card);
+    }
+
     editHover() {
+        this.updateHighlight();
+    }
+
+    updateHighlight() {
         let rect = this.el.getBoundingClientRect();
         let containerRect = this.view.el.getBoundingClientRect();
 
@@ -169,10 +241,27 @@ class PointMarkingPresence {
     }
 
     editOpen() {
-        if (this.controller.currentEditPanel == null) {
-            new PointMarkingEditPanel(this);
+        if (this.editPanel == null) {
+            let presence = this;
+
+            if (this.editPanel == null) {
+                this.editPanel = new PointMarkingEditPanel(this);
+            }
+            if (this.editPanel != null) {
+                this.el.addEventListener("pointerdown", function(e) {
+                    presence.editPanel?.close();
+                    presence.startMove(e);
+                });
+
+                this.editPanel.el.addEventListener("closed", function (e) {
+                    presence.editPanel = null;
+                    presence.autoDismissOnUp = true;
+                    // if (presence.isMoveHandling)
+                    //     setDiagramHandle({});
+                });
+            }
         }
-        setTopPanel(this.controller.currentEditPanel);
+        setTopPanel(this.editPanel);
         return true;
     }
 
@@ -224,13 +313,13 @@ class PointMarkingPresence {
     setTransformedXFormatted(val) {
         if (this.controller.positionView !== this.view)
             this.rebaseTo();
-        this.controller.setX(parseFloat(val));
+        this.controller.setX(val);
     }
 
     setTransformedCtFormatted(val) {
         if (this.controller.positionView !== this.view)
             this.rebaseTo();
-        this.controller.setCt(parseFloat(val));
+        this.controller.setCt(val);
     }
 
     //obj.presences[view].setPos(obj.x, obj.ct);
