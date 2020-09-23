@@ -407,9 +407,8 @@ class Rectangle {
     };
 
     setMinXFormatted(x) {
-        //let parsed = parseFloat(x);
-
-        let minXIntention = parseFloat(x);
+        let parsed = parseFloat(x);
+        let minXIntention = isNaN(parsed) ? this.minX : parsed;
         let maxXIntention = this.maxXIntention || this.maxX;
         this.minXIntention = null;
         this.maxXIntention = null;
@@ -417,35 +416,42 @@ class Rectangle {
         this.setPosition(minXIntention, maxXIntention, this.minCt, this.maxCt);
     };
     setMinXFormattedLive(x) {
-        this.minXIntention = parseFloat(x);
+        let parsed = parseFloat(x);
+        this.minXIntention = isNaN(parsed) ? this.minX : parsed;
         this.maxXIntention = this.maxXIntention || this.maxX;
         this.setPosition(this.minXIntention, this.maxXIntention, this.minCt, this.maxCt);
     };
 
     setMaxXFormatted(x) {
+        let parsed = parseFloat(x);
+
         let minXIntention = this.minXIntention || this.minX;
-        let maxXIntention = parseFloat(x);
+        let maxXIntention = isNaN(parsed) ? this.maxX : parsed;
         this.minXIntention = null;
         this.maxXIntention = null;
 
         this.setPosition(minXIntention, maxXIntention, this.minCt, this.maxCt);
     };
     setMaxXFormattedLive(x) {
+        let parsed = parseFloat(x);
+
         this.minXIntention = this.minXIntention || this.minX;
-        this.maxXIntention = parseFloat(x);
+        this.maxXIntention = isNaN(parsed) ? this.maxX : parsed;
         this.setPosition(this.minXIntention, this.maxXIntention, this.minCt, this.maxCt);
     };
 
-    setMinCtFormatted(ct) {
-        this.setMinCt(parseFloat(ct));
-    };
+    // setMinCtFormatted(ct) {
+    //     this.setMinCt(parseFloat(ct));
+    // };
 
-    setMaxCtFormatted(ct) {
-        this.setMaxCt(parseFloat(ct));
-    };
+    // setMaxCtFormatted(ct) {
+    //     this.setMaxCt(parseFloat(ct));
+    // };
 
     setMinCtFormatted(ct) {
-        let minCtIntention = parseFloat(ct);
+        let parsed = parseFloat(ct);
+
+        let minCtIntention = isNaN(parsed) ? this.minCt : parsed;
         let maxCtIntention = this.maxCtIntention || this.maxCt;
         this.minCtIntention = null;
         this.maxCtIntention = null;
@@ -453,22 +459,28 @@ class Rectangle {
         this.setPosition(this.minX, this.maxX, minCtIntention, maxCtIntention);
     };
     setMinCtFormattedLive(ct) {
-        this.minCtIntention = parseFloat(ct);
+        let parsed = parseFloat(ct);
+
+        this.minCtIntention = isNaN(parsed) ? this.mint : parsed;
         this.maxCtIntention = this.maxCtIntention || this.maxCt;
         this.setPosition(this.minX, this.maxX, this.minCtIntention, this.maxCtIntention);
     };
 
     setMaxCtFormatted(ct) {
+        let parsed = parseFloat(ct);
+
         let minCtIntention = this.minCtIntention || this.minCt;
-        let maxCtIntention = parseFloat(ct);
+        let maxCtIntention = isNaN(parsed) ? this.maxCt : parsed;
         this.minCtIntention = null;
         this.maxCtIntention = null;
 
         this.setPosition(this.minX, this.maxX, minCtIntention, maxCtIntention);
     };
     setMaxCtFormattedLive(ct) {
+        let parsed = parseFloat(ct);
+
         this.minCtIntention = this.minCtIntention || this.minCt;
-        this.maxCtIntention = parseFloat(ct);
+        this.maxCtIntention = isNaN(parsed) ? this.maxCt : parsed;
         this.setPosition(this.minX, this.maxX, this.minCtIntention, this.maxCtIntention);
     };
 
