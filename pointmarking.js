@@ -307,11 +307,16 @@ class PointMarking {
     };
 
     setX(x) {
-        this.setPosition(parseFloat(x), this.ct);
+        let parsed = parseFloat(x);
+
+        this.setPosition(isNaN(parsed) ? this.x : parsed, this.ct);
     };
 
     setCt(ct) {
-        this.setPosition(this.x, parseFloat(ct));
+        let parsed = parseFloat(ct);
+
+        //this.setPosition(this.x, parseFloat(ct));
+        this.setPosition(this.x, isNaN(parsed) ? this.ct : parsed);
     };
 
     setPosition(x, ct) {
