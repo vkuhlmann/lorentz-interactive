@@ -98,6 +98,60 @@ get a feeling for Lorentz transformations.">
 	<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
 	<!--<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.es5.min.js"></script>-->
 
+	<script type="text/javascript">
+		window.MathJax = {
+			jax: ["input/TeX", "output/SVG"],
+			extensions: ["tex2jax.js", "MathMenu.js", "MathZoom.js"],
+			showMathMenu: false,
+			showProcessingMessages: false,
+			messageStyle: "none",
+			SVG: {
+				useGlobalCache: false
+			},
+			TeX: {
+				extensions: ["AMSmath.js", "AMSsymbols.js", "autoload-all.js"]
+			},
+			AuthorInit: function () {
+				MathJax.Hub.Register.StartupHook("End", function () {
+					var mj2img = function (texstring, callback) {
+						var input = texstring;
+						var wrapper = document.createElement("div");
+						wrapper.innerHTML = input;
+						var output = { svg: "", img: "" };
+						MathJax.Hub.Queue(["Typeset", MathJax.Hub, wrapper]);
+						MathJax.Hub.Queue(function () {
+							var mjOut = wrapper.getElementsByTagName("svg")[0];
+							mjOut.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+							// thanks, https://spin.atomicobject.com/2014/01/21/convert-svg-to-png/
+							output.svg = mjOut.outerHTML;
+							var image = new Image();
+							image.src = 'data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(output.svg)));
+							image.onload = function () {
+								var canvas = document.createElement('canvas');
+								canvas.width = image.width;
+								canvas.height = image.height;
+								var context = canvas.getContext('2d');
+								context.drawImage(image, 0, 0);
+								output.img = canvas.toDataURL('image/png');
+								callback(output);
+							};
+						});
+					}
+					mj2img("\\[f: X \\to Y\\]", function (output) {
+						//document.getElementById("target").innerText = output.img + '\n' + output.svg;
+						document.getElementById("target").innerHTML = output.svg;
+					});
+				});
+			}
+		};
+	</script>
+
+	<!--<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+	<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>-->
+	<script type="text/javascript"
+		src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_CHTML">
+		</script>
+
 	<script src="diagraminteraction.js"></script>
 
 	<script src="utils.js"></script>
@@ -305,9 +359,12 @@ get a feeling for Lorentz transformations.">
 							</marker>
 							<g id="template-pointmarker">
 								<circle cx="0" cy="0" r="1.1588" data-binding="centerpoint" />
-								<text data-binding="label" x="2.2" y="2"
+								<text data-id="plainLabel" data-binding="label" x="2.2" y="2"
 									style="font:normal 4.9389px sans-serif;">Element
 									a</text>
+								<g data-id="formattedLabel">
+
+								</g>
 							</g>
 							<g id="template-rectangle">
 								<path data-id="shape" d="M 0 0 h 20 v 20 h -20 z" />
@@ -865,7 +922,7 @@ get a feeling for Lorentz transformations.">
 							alt="Hits" />-->
 
 						<!-- hitwebcounter Code START -->
-<!--
+						<!--
 						<a href="https://www.hitwebcounter.com" target="_blank">
 							<img src="https://hitwebcounter.com/counter/counter.php?page=7673909&style=0024&nbdigits=3&type=page&initCount=25"
 								title="Total Website Hits" Alt="Web Hits" border="0" /></a>
@@ -876,6 +933,10 @@ get a feeling for Lorentz transformations.">
 
 
 			<div id="cardsholder" style="display:flex;flex-flow:row wrap;justify-content:center;">
+
+			</div>
+
+			<div id="target">
 
 			</div>
 

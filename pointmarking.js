@@ -250,7 +250,7 @@ class PointMarkingPresence {
                 this.editPanel = new PointMarkingEditPanel(this);
             }
             if (this.editPanel != null) {
-                this.el.addEventListener("pointerdown", function(e) {
+                this.el.addEventListener("pointerdown", function (e) {
                     presence.editPanel?.close();
                     presence.startMove(e);
                 });
@@ -394,6 +394,13 @@ class PointMarking {
             throw "Hoofdletters!";
         this.label = label;
         updateBinding(this, "label");
+
+        for (let p of this.presences) {
+            setLaTeXContent($("[data-id=\"formattedLabel\"]", p.el)[0],
+                this.label);
+        }
+
+        //MathJax.typesetPromise();
         //$("[data-binding=label]", el)[0].innerHTML = obj.label;
     };
 

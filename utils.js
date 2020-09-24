@@ -362,3 +362,25 @@ function getRectanglesIntersection(rect1, rect2) {
 
     return new DOMRect(left, top, right - left, bottom - top);
 }
+
+function createLaTeXSVGCode(code, callback) {
+    var wrapper = document.createElement("div");
+    wrapper.innerHTML = code;
+    let svgCode;
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, wrapper]);
+    MathJax.Hub.Queue(function () {
+        let mjOut = wrapper.getElementsByTagName("svg")[0];
+        if (mjOut == null)
+            return;//callback(code);
+        mjOut.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        svgCode = mjOut.outerHTML;
+        //svgCode = wrapper.innerHTML;
+        callback(svgCode);
+    });
+}
+
+function setLaTeXContent(el, code) {
+    createLaTeXSVGCode(`\\[${code}\\]`, function (svgCode) {
+        el.innerHTML = svgCode;
+    });
+}
